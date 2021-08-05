@@ -1,0 +1,491 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2015,SC1090
+
+# MIT license (c) 2021 https://github.com/slowpeek
+# Homepage: https://github.com/slowpeek/mozilla-update
+
+set -eu
+
+! test -f locate-exit.sh || source "$_"
+
+# --------------------------------------------------------------
+# MIT license (c) 2021 https://github.com/slowpeek
+# Homepage: https://github.com/slowpeek/here-bye
+
+_ () {
+    IFS=, read -r -a HERE_PREFIX <<< "${HERE_PREFIX-}"
+    IFS=, read -r -a BYE_PREFIX <<< "${BYE_PREFIX-}"
+}; _; unset -f _
+
+here () {
+    if (($# > 0)); then
+        if [[ -v HERE_PREFIX ]]; then
+            printf '[%s]' "${HERE_PREFIX[@]}"
+            echo -n ' '
+        fi
+
+        local IFS=' '
+        printf '%s\n' "$*"
+    fi
+}
+
+here2 () {
+    here "$@" >&2
+}
+
+bye () {
+    HERE_PREFIX=("${BYE_PREFIX[@]}" "${HERE_PREFIX[@]}")
+
+    here "$@" >&2
+    exit "${BYE_EXIT:-1}"
+}
+# --------------------------------------------------------------
+
+# Rename bye => org_bye
+eval org_"$(declare -f bye)"
+
+here_prefix () {
+    HERE_PREFIX+=("$1")
+}
+
+here_unprefix () {
+    unset -v 'HERE_PREFIX[-1]'
+}
+
+here_color () {
+    if [[ -v HERE_PREFIX ]]; then
+        HERE_PREFIX[-1]=$1${HERE_PREFIX[-1]}$'\e[0m'
+        undo=trim
+    else
+        here_prefix "$1$2"$'\e[0m'
+        undo=pop
+    fi
+}
+
+here_uncolor () {
+    if [[ $1 == trim ]]; then
+        HERE_PREFIX[-1]=${HERE_PREFIX[-1]:5:-4}
+    else
+        here_unprefix
+    fi
+}
+
+here_success () {
+    local undo
+    here_color $'\e[32m' success
+    here "$@"
+    here_uncolor "$undo"
+}
+
+bye () {
+    local undo
+    here_color $'\e[31m' error
+    org_bye "$@"
+}
+
+curl () {
+    command curl --connect-timeout 3 --compressed -f "$@"
+}
+
+need_bin () {
+    hash "$1" 2>/dev/null || bye "cand find ${1@Q} binary"
+}
+
+version_le () {
+    printf '%s\n' "$1" "$2" | sort --check=quiet -V
+}
+
+_dir () { [[ -d $1 ]] || bye "${1@Q} is not a dir"; }
+w_dir () { [[ -w $1 && -x $1 ]] || bye "${1@Q} is not writable"; }
+r_dir () { [[ -r $1 && -x $1 ]] || bye "${1@Q} is not readable"; }
+
+installed_versions () {
+    r_dir "$base"
+
+    [[ $1 == list ]] || local -n list=$1
+    list=()
+
+    local dir
+    for dir in $(cd "$base"; compgen -G "$pkg-*[0-9]*" | sort -Vr); do
+        if [[ $dir == *esr ]]; then
+            [[ $type == esr ]] || continue
+            list+=("$dir")
+        elif [[ $dir == *[0-9]b+([0-9]) ]]; then
+            [[ $type == beta ]] || continue
+            list+=("$dir")
+        else
+            [[ $type == release ]] || continue
+            list+=("$dir")
+        fi
+    done
+
+    list=("${list[@]#*-}")
+}
+
+latest_version () {
+    need_bin curl
+
+    [[ $1 == ver ]] || local -n ver=$1
+    ver=
+
+    local -A patterns=(
+        [release]='\d+\.\d+(\.\d+)?'
+        [beta]='\d+\.0b\d+'
+        [esr]='\d+\.\d+(\.\d+)?esr'
+    )
+
+    ver=$(curl -sS "$base_url/" 2>/dev/null |
+              grep -oP "${patterns[$type]}(?=/</a>)" |
+              sort -Vr | head -n1)
+
+    [[ -n $ver ]] || bye "cant get latest $name version"
+}
+
+check_gpg_key () {
+    here_prefix gpg
+    need_bin gpg
+
+    local key=14F26682D0916CDD81E37B6D61B7B526D98F0353
+
+    if ! gpg --list-key "$key" &>/dev/null; then
+        gpg --recv-keys "$key" || bye 'key fetch fail'
+        here_success 'key fetch OK'
+    fi
+
+    here_unprefix
+}
+
+download_latest () {
+    here_prefix download
+
+    here "pkg=$name lang=$lang"
+
+    local installed
+    installed_versions installed
+    here "installed version: ${installed:-none}"
+
+    local latest
+    latest_version latest
+    here "latest version: $latest"
+
+    if [[ -v installed ]] && version_le "$latest" "$installed"; then
+        here 'no updates available'
+        exit
+    fi
+
+    local fn=$pkg-$latest.tar.bz2 args=() f
+
+    for f in "$fn"{,.asc}; do
+        [[ -e $f ]] || args+=(-O "$base_url/$latest/linux-$HOSTTYPE/$lang/$f")
+    done
+
+    if [[ -v args ]]; then
+        [[ -w . ]] || bye "${PWD@Q} is not writable"
+
+        curl "${args[@]}" || bye 'curl error'
+        here_success "$((${#args[@]} >> 1)) files fetched"
+    else
+        here 'skip fetch'
+    fi
+
+    check_gpg_key
+
+    gpg --verify "$fn".asc || bye 'gpg verify fail'
+    here_success 'good gpg signature'
+
+    if (($#)); then
+        [[ $1 == file ]] || local -n file=$1
+        # shellcheck disable=SC2034
+        file=$fn
+    fi
+
+    here_unprefix
+}
+
+select_version () {
+    here_prefix select
+
+    local installed
+    installed_versions installed
+
+    [[ -v installed ]] || bye 'nothing to select from'
+
+    local link=$base/$name link_action=create cur=
+    if [[ -h $link ]]; then
+        cur=$(readlink "$link")
+        [[ $cur == $pkg-* ]] || bye "${link@Q} target looks invalid"
+
+        cur=${cur#*-}
+        link_action=update
+    else
+      [[ ! -e $link ]] || bye "${link@Q} must be a symlink"
+    fi
+
+    [[ -z $cur ]] || installed=("${installed[@]/%$cur/$cur*}")
+
+    # '-u' for unattended mode.
+    if [[ ${1-} != -u ]]; then
+        echo -e "\nWhich version of $name the symlink should point to:\n"
+
+        local sel PS3=$'\nYour choice: '
+        select sel in "${installed[@]}"; do
+            break
+        done <<< dummy
+    fi
+
+    read -r sel || true
+
+    [[ ${1-} == -u ]] || echo
+
+    if [[ -n $sel ]]; then
+        [[ $sel == [1-9]*([0-9]) ]] && ((sel <= ${#installed[@]})) ||
+            bye 'there was no such option'
+
+        sel=${installed[sel-1]%\*}
+    fi
+
+    if [[ -z $sel || $sel == "$cur" ]]; then
+        here 'no changes'
+        exit
+    fi
+
+    w_dir "$base"
+
+    ln -sfT "$pkg-$sel" "$base/$name" || bye "cant $link_action ${link@Q}"
+
+    here_success "${link_action} link: $name => $pkg-$sel"
+
+    here_unprefix
+}
+
+list_langs () {
+    here_prefix langs
+
+    here "pkg=$name"
+
+    local latest
+    latest_version latest
+    here "latest version: $latest"
+
+    local langs
+    # 'cat' is used below to ensure pipe status=0
+    readarray -t langs < <(curl -sS "$base_url/$latest/linux-$HOSTTYPE/" 2>/dev/null |
+                               grep -oP '(?<=>)[^/]+(?=/</a>)' | cat)
+
+    [[ -v langs ]] || bye "cant list langs for $name"
+
+    echo -e "\n${#langs[@]} available languages:\n"
+    printf '%s\n' "${langs[@]}" | pr -t8 -s' ' | column -t
+
+    here_unprefix
+}
+
+install_file () {
+    here_prefix install
+
+    [[ -f $1 ]] || bye "${1@Q} is not a regular file"
+    [[ -r $1 ]] || bye "${1@Q} is not readable"
+    [[ $1 == *.tar.bz2 ]] || bye "${1@Q} is not a .tar.bz2 archive"
+
+    local fn=${1##*\/}
+
+    [[ $fn == @(firefox|thunderbird)-[1-9]* ]] ||
+        bye "${1@Q} doesnt look like a mozilla package"
+
+    w_dir "$base"
+
+    local dir=$base/${1%.tar.bz2}
+    if [[ -e $dir ]]; then
+        _dir "$dir"
+        w_dir "$dir"
+    else
+        mkdir "$dir"
+    fi
+
+    here "extract to ${dir@Q}"
+
+    tar xf "$1" -C "$dir" --strip-components=1 --checkpoint=.400 ||
+        bye 'extract fail'
+
+    echo
+    here_success 'extract OK'
+
+    here_unprefix
+}
+
+getopt () {
+    [[ $1 == map ]] || local -n map=$1
+    shift
+
+    local short
+    printf -v short '%s' "${!map[@]}"
+    short=${short//-}           # '-' is used for long options without
+                                # a short alias
+
+    local IFS=,
+    command getopt -o "+$short" -l "${map[*]}" -- "$@"
+}
+
+set_pkg () {
+    name=${1,,}
+
+    local -A names=(
+        [firefox]=t [firefox-beta]=t [firefox-esr]=t
+        [thunderbird]=t [thunderbird-beta]=t
+    )
+
+    [[ -v names[$name] ]] || bye "valid package names are: ${!names[*]}"
+
+    pkg=$name
+    type=release
+
+    if [[ $name == *-* ]]; then
+        pkg=${name%-*}
+        type=${name#*-}
+    fi
+}
+
+usage () {
+    cat <<'EOF'
+USAGE
+
+    mozilla-update [--lang <lang>] [--base <dir>] <package>
+    mozilla-update --download [--lang <lang>] <package>
+    mozilla-update --install [--base <dir>] <file>
+    mozilla-update --select [--base <dir>] <package>
+    mozilla-update --list-langs <package>
+
+Package is one of: firefox, firefox-beta, firefox-esr, thunderbird,
+thunderbird-beta.
+
+By default try to download and install the latest version of the
+package in 'en-US' language into '/opt/mozilla' and update the symlink
+there.
+
+
+OPTIONS SUMMARY
+
+Settings
+
+-b --base <dir>
+    Base dir for installations. By default '/opt/mozilla'.
+
+-l --lang <lang>
+    Package language to download. By default 'en-US'.
+
+Actions
+
+-d --download
+    Download the latest version of the package into the current dir
+    and verify the signature.
+
+-i --install
+    Install a previously downloaded archive into the base dir.
+
+-s --select
+    Select version for the package's symlink in the base dir.
+
+--list-langs
+    List available languages for the latest version of the package.
+
+EOF
+    exit
+}
+
+main () {
+    [[ $HOSTTYPE == @(x86_64|i686) ]] ||
+        bye 'Mozilla only provides packages for x86_64 and i686.' \
+            "Your arch is $HOSTTYPE"
+
+    (($#)) || usage
+
+    local -A map=(
+        [d]=download [i]=install [s]=select [-]=list-langs
+        [l:]=lang: [b:]=base:
+    )
+
+    local opts
+    opts=$(getopt map "$@") || bye 'options error'
+    eval set -- "$opts"
+    unset -v opts map
+
+    local mode=default lang=en-US base=/opt/mozilla
+
+    while [[ $1 != -- ]]; do
+        case $1 in
+            -d|--download)
+                mode=download
+                ;;
+            -i|--install)
+                mode=install
+                ;;
+            -s|--select)
+                mode=select
+                ;;
+            --list-langs)
+                mode=langs
+                ;;
+            -l|--lang)
+                lang=$2
+                shift
+                ;;
+            -b|--base)
+                base=$2
+                shift
+                ;;
+        esac
+
+        shift
+    done
+
+    shift
+
+    [[ $mode == langs ]] || _dir "$base"
+
+    if [[ $mode == install ]]; then
+        (($#)) || bye 'a file arg is required'
+
+        install_file "$1"
+    else
+        (($#)) || bye 'a package name arg is required'
+
+        local name pkg type
+        set_pkg "$1"
+
+        local base_url=https://download-installer.cdn.mozilla.net/pub/$pkg/releases
+
+        case $mode in
+            'download')
+                download_latest
+                ;;
+            'select')
+                select_version
+                ;;
+            'langs')
+                list_langs
+                ;;
+            'default')
+                [[ -n ${TMPDIR:-} ]] || bye 'TMPDIR is not set or empty'
+
+                # Readonly flag is used here to protect $dir from
+                # unintentional changes until the dir is deleted.
+                local -r dir=$TMPDIR/mozilla-update:$name
+
+                [[ -e $dir ]] && _dir "$dir" || mkdir "$dir"
+                pushd "$dir" >/dev/null
+
+                local file
+                download_latest file
+
+                install_file "$file"
+
+                (select_version -u <<< 1) || exit
+
+                popd >/dev/null
+                rm -r "$dir"
+                ;;
+        esac
+    fi
+}
+
+[[ ! ${BASH_SOURCE[0]} == "$0" ]] || main "$@"
