@@ -411,8 +411,12 @@ main () {
 
     local mode=default lang=en-US base=/opt/mozilla
 
-    while [[ $1 != -- ]]; do
+    while true; do
         case $1 in
+            --)
+                shift
+                break
+                ;;
             -d|--download)
                 mode=download
                 ;;
@@ -437,8 +441,6 @@ main () {
 
         shift
     done
-
-    shift
 
     [[ $mode == langs ]] || _dir "$base"
 
