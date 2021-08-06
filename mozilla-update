@@ -93,16 +93,16 @@ curl () {
 }
 
 need_bin () {
-    type -P "$1" >/dev/null || bye "cant find ${1@Q} binary"
+    type -P "$1" >/dev/null || bye "cant find '$1' binary"
 }
 
 version_le () {
     printf '%s\n' "$1" "$2" | sort --check=quiet -V
 }
 
-_dir () { [[ -d $1 ]] || bye "${1@Q} is not a dir"; }
-w_dir () { [[ -w $1 && -x $1 ]] || bye "${1@Q} is not writable"; }
-r_dir () { [[ -r $1 && -x $1 ]] || bye "${1@Q} is not readable"; }
+_dir () { [[ -d $1 ]] || bye "'$1' is not a dir"; }
+w_dir () { [[ -w $1 && -x $1 ]] || bye "'$1' is not writable"; }
+r_dir () { [[ -r $1 && -x $1 ]] || bye "'$1' is not readable"; }
 
 installed_versions () {
     r_dir "$base"
@@ -124,7 +124,7 @@ installed_versions () {
         fi
     done
 
-    list=("${list[@]#*-}")
+    [[ ! -v list ]] || list=("${list[@]#*-}")
 }
 
 latest_version () {
@@ -153,7 +153,8 @@ check_gpg_key () {
     local key=14F26682D0916CDD81E37B6D61B7B526D98F0353
 
     if ! gpg --list-key "$key" &>/dev/null; then
-        gpg --recv-keys "$key" || bye 'key fetch fail'
+        # keyserver.ubuntu.com still works with trusty
+        gpg --recv-keys --keyserver keyserver.ubuntu.com "$key" || bye 'key fetch fail'
         here_success 'key fetch OK'
     fi
 
@@ -185,7 +186,7 @@ download_latest () {
     done
 
     if [[ -v args ]]; then
-        [[ -w . ]] || bye "${PWD@Q} is not writable"
+        [[ -w . ]] || bye "'$PWD' is not writable"
 
         curl "${args[@]}" || bye 'curl error'
         here_success "$((${#args[@]} >> 1)) files fetched"
@@ -218,12 +219,12 @@ select_version () {
     local link=$base/$name link_action=create cur=
     if [[ -h $link ]]; then
         cur=$(readlink "$link")
-        [[ $cur == $pkg-* ]] || bye "${link@Q} target looks invalid"
+        [[ $cur == $pkg-* ]] || bye "'$link' target looks invalid"
 
         cur=${cur#*-}
         link_action=update
     else
-      [[ ! -e $link ]] || bye "${link@Q} must be a symlink"
+      [[ ! -e $link ]] || bye "'$link' must be a symlink"
     fi
 
     [[ -z $cur ]] || installed=("${installed[@]/%$cur/$cur*}")
@@ -256,7 +257,7 @@ select_version () {
 
     w_dir "$base"
 
-    ln -sfT "$pkg-$sel" "$base/$name" || bye "cant $link_action ${link@Q}"
+    ln -sfT "$pkg-$sel" "$base/$name" || bye "cant $link_action '$link'"
 
     here_success "${link_action} link: $name => $pkg-$sel"
 
@@ -279,6 +280,8 @@ list_langs () {
 
     [[ -v langs ]] || bye "cant list langs for $name"
 
+    need_bin column
+
     echo -e "\n${#langs[@]} available languages:\n"
     printf '%s\n' "${langs[@]}" | pr -t8 -s' ' | column -t
 
@@ -288,14 +291,14 @@ list_langs () {
 install_file () {
     here_prefix install
 
-    [[ -f $1 ]] || bye "${1@Q} is not a regular file"
-    [[ -r $1 ]] || bye "${1@Q} is not readable"
-    [[ $1 == *.tar.bz2 ]] || bye "${1@Q} is not a .tar.bz2 archive"
+    [[ -f $1 ]] || bye "'$1' is not a regular file"
+    [[ -r $1 ]] || bye "'$1' is not readable"
+    [[ $1 == *.tar.bz2 ]] || bye "'$1' is not a .tar.bz2 archive"
 
     local fn=${1##*\/}
 
     [[ $fn == @(firefox|thunderbird)-[1-9]* ]] ||
-        bye "${1@Q} doesnt look like a mozilla package"
+        bye "'$1' doesnt look like a mozilla package"
 
     w_dir "$base"
 
@@ -307,7 +310,7 @@ install_file () {
         mkdir "$dir"
     fi
 
-    here "extract to ${dir@Q}"
+    here "extract to '$dir'"
 
     tar xf "$1" -C "$dir" --strip-components=1 --checkpoint=.400 ||
         bye 'extract fail'
