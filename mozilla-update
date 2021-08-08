@@ -460,9 +460,10 @@ main () {
         _dir "$base"
 
         # Ensure $base is an absolute path.
-        [[ $base == /* ]] ||
+        if [[ $base != /* ]]; then
             is_bin realpath && base=$(realpath -s "$base") ||
                     base=$(readlink -m "$base")
+        fi
     fi
 
     if [[ $mode == install ]]; then
