@@ -358,14 +358,16 @@ set_pkg () {
 }
 
 usage () {
-    cat <<'EOF'
+    local self=${BASH_SOURCE[0]##*/}
+
+    cat <<EOF
 USAGE
 
-    mozilla-update [--lang <lang>] [--base <dir>] <package>
-    mozilla-update --download [--lang <lang>] <package>
-    mozilla-update --install [--base <dir>] <file>
-    mozilla-update --select [--base <dir>] <package>
-    mozilla-update --list-langs <package>
+    ${self} [--lang <lang>] [--base <dir>] <package>
+    ${self} --download [--lang <lang>] <package>
+    ${self} --install [--base <dir>] <file>
+    ${self} --select [--base <dir>] <package>
+    ${self} --list-langs <package>
 
 Package is one of: firefox, firefox-beta, firefox-esr, thunderbird,
 thunderbird-beta.
@@ -488,9 +490,12 @@ main () {
             'default')
                 [[ -n ${TMPDIR:-} ]] || bye 'TMPDIR is not set or empty'
 
+                local token=${BASH_SOURCE[0]##*/}
+                token=${token%%.*}
+
                 # Readonly flag is used here to protect $dir from
                 # unintentional changes until the dir is deleted.
-                local -r dir=$TMPDIR/mozilla-update:$name
+                local -r dir=$TMPDIR/$token:$name
 
                 [[ -e $dir ]] && _dir "$dir" || mkdir "$dir"
                 pushd "$dir" >/dev/null
