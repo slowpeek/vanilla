@@ -92,8 +92,12 @@ curl () {
     command curl --connect-timeout 3 --compressed -f "$@"
 }
 
+is_bin () {
+    type -P "$1" >/dev/null
+}
+
 need_bin () {
-    type -P "$1" >/dev/null || bye "cant find '$1' binary"
+    is_bin "$1" || bye "cant find '$1' binary"
 }
 
 version_le () {
@@ -450,7 +454,14 @@ main () {
         shift
     done
 
-    [[ $mode == langs ]] || _dir "$base"
+    if [[ $mode != langs ]]; then
+        _dir "$base"
+
+        # Ensure $base is an absolute path.
+        [[ $base == /* ]] ||
+            is_bin realpath && base=$(realpath -s "$base") ||
+                    base=$(readlink -m "$base")
+    fi
 
     if [[ $mode == install ]]; then
         (($#)) || bye 'a file arg is required'
