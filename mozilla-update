@@ -97,7 +97,16 @@ is_bin () {
 }
 
 need_bin () {
-    is_bin "$1" || bye "cant find '$1' binary"
+    local bin
+
+    for bin; do
+        ! is_bin "$bin" || return 0
+    done
+
+    local msg='cant find '
+    (($#>1)) && msg+="any of binaries: $*" || msg+="binary: $1"
+
+    bye "$msg"
 }
 
 version_le () {
@@ -315,6 +324,8 @@ install_file () {
     fi
 
     here "extract to '$dir'"
+
+    need_bin bzip2 lbzip2
 
     tar xf "$1" -C "$dir" --strip-components=1 --checkpoint=.400 ||
         bye 'extract fail'
