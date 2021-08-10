@@ -6,7 +6,7 @@
 
 set -eu
 
-! test -f locate-exit.sh || source "$_"
+! test -f "${BASH_SOURCE[0]%/*}"/locate-exit.sh || source "$_"
 
 # --------------------------------------------------------------
 # MIT license (c) 2021 https://github.com/slowpeek
