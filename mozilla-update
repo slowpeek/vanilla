@@ -383,7 +383,13 @@ set_pkg () {
     fi
 }
 
-check_glibc () {
+check_reqs () {
+    # arch
+    [[ $HOSTTYPE == @(x86_64|i686) ]] ||
+        bye 'Mozilla only provides packages for x86_64 and i686.' \
+            "Your arch is $HOSTTYPE"
+
+    # glibc
     local req=2.18 line
 
     read -r line < <(ldd --version)
@@ -448,11 +454,7 @@ EOF
 }
 
 main () {
-    [[ $HOSTTYPE == @(x86_64|i686) ]] ||
-        bye 'Mozilla only provides packages for x86_64 and i686.' \
-            "Your arch is $HOSTTYPE"
-
-    check_glibc
+    check_reqs
 
     (($#)) || usage
 
