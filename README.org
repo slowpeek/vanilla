@@ -1,0 +1,107 @@
+* About
+
+This script can be used to install and keep updated the official linux
+builds of [[https://download-installer.cdn.mozilla.net/pub/firefox/releases/][Firefox]] and [[https://download-installer.cdn.mozilla.net/pub/thunderbird/releases/][Thunderbird]]. Regular releases, betas and ESR
+(Firefox only) are supported.
+
+As of time of writing, the builds require =glibc 2.18=. It means for
+example Ubuntu 14.04 is the oldest supported Ubuntu and Debian 8 is
+the oldest supported Debian. With that limitation in mind the script
+requires at least =bash 4.3=
+
+* Installation
+
+The only required step is creating the [[#base-dir][base dir]].
+
+*  Usage
+
+#+begin_example
+  mozilla-update [--lang <lang>] [--base <dir>] <package>
+  mozilla-update --download [--lang <lang>] <package>
+  mozilla-update --install [--base <dir>] <file>
+  mozilla-update --select [--base <dir>] <package>
+  mozilla-update --list-langs <package>
+#+end_example
+
+** Packages
+
+- firefox
+- firefox-beta
+- firefox-esr
+- thunderbird
+- thunderbird-beta
+
+** Base dir
+
+The script installs packages into the /base dir/, by default
+=/opt/mozilla=. With =-b <dir>= / =--base <dir>= you can set a custom
+base dir.
+
+*The script doesnt create the base dir*, you should create it yourself.
+
+With some packages installed, the base dir layout looks like this:
+
+#+begin_example
+  firefox -> firefox-91.0
+  firefox-78.12.0esr
+  firefox-90.0.1
+  firefox-90.0.2
+  firefox-91.0
+  firefox-91.0esr
+  firefox-esr -> firefox-91.0esr
+  thunderbird-91.0b6
+  thunderbird-beta -> thunderbird-91.0b6
+#+end_example
+
+As you see there are multiple versions of some packages and some of
+those are targeted by non-versioned symlinks. You can interactively
+retarget the symlinks with =-s= / =--select= mode described below.
+
+** Languages
+
+Mozilla provides packages in many languages. By default the script
+uses =en-US= one. You can set a custom lang with =-l <lang>= / =--lang
+<lang>=. Use =--list-langs= option described below to list available
+languages for a package.
+
+** Modes
+
+The script runs in such modes:
+
+- usage mode :: If run without any args, just show the usage text.
+
+- =-d= / =--download= :: Download the latest version of a package into
+  the current dir if only an update is available and verify the
+  signature.
+
+  Example: =mozilla-update -d firefox=
+
+- =-i= / =--install= :: Install a previously downloaded archive into
+  the base dir.
+
+  Example: =mozilla-update -i firefox-91.0.tar.bz2=
+
+- =-s= / =--select= :: Interactively select version for a package's
+  symlink in the base dir.
+
+  Example: =mozilla-update -s firefox=
+
+- =--list-langs= :: List available languages for the latest version of a
+  package.
+
+  Example: =mozilla-update --list-langs firefox=
+
+- upgrade mode :: If none of the above were used, try to upgrade a
+  package and refresh its symlink in the case. *This is what the most
+  users would use.*
+
+  Example: =mozilla-update firefox=
+
+* FAQ
+
+- Why not use built-in Firefox/Thunderbird upgrades :: I dont like the
+  idea of self modifying software especially in case of a browser.
+
+- Why there is no thunderbird-esr package :: Thunderbird ESR is
+  discontinued since 2014. Thunderbird tracks Firefox ESR [[https://wiki.mozilla.org/Release_Management/Calendar][schedule]]
+  instead.
