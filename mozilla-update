@@ -4,6 +4,13 @@
 # MIT license (c) 2021 https://github.com/slowpeek
 # Homepage: https://github.com/slowpeek/mozilla-update
 
+v=("${BASH_VERSINFO[@]}")
+if ((v[0] < 4 || (v[0] == 4 && v[1] < 3))); then
+    echo "This script requires bash 4.3. Yours is ${v[0]}.${v[1]}"
+    exit 1
+fi
+unset -f v
+
 set -eu
 
 ! test -f "${BASH_SOURCE[0]%/*}"/locate-exit.sh || source "$_"
