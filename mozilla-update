@@ -413,9 +413,8 @@ USAGE
 Package is one of: firefox, firefox-beta, firefox-esr, thunderbird,
 thunderbird-beta.
 
-By default try to download and install the latest version of the
-package in 'en-US' language into '/opt/mozilla' and update the symlink
-there.
+By default try to download and install the latest version of a package
+in 'en-US' language into '/opt/mozilla' and refresh the symlink there.
 
 
 OPTIONS SUMMARY
@@ -431,17 +430,18 @@ Settings
 Actions
 
 -d --download
-    Download the latest version of the package into the current dir
-    and verify the signature.
+    Download the latest version of a package into the current dir if
+    only an update is available and verify the signature.
 
 -i --install
     Install a previously downloaded archive into the base dir.
 
 -s --select
-    Select version for the package's symlink in the base dir.
+    Interactively select version for a package's symlink in the base
+    dir.
 
 --list-langs
-    List available languages for the latest version of the package.
+    List available languages for the latest version of a package.
 
 EOF
     exit
