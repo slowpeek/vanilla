@@ -75,11 +75,19 @@ here_uncolor () {
     fi
 }
 
-here_success () {
+here_colorful () {
     local undo
-    here_color $'\e[32m' success
-    here "$@"
+    here_color "$1" "$2"
+    here "${@:3}"
     here_uncolor "$undo"
+}
+
+here_success () {
+    here_colorful $'\e[32m' success "$@"
+}
+
+here_warn () {
+    here_colorful  $'\e[33m' warning "$@"
 }
 
 bye () {
@@ -368,6 +376,21 @@ set_pkg () {
     fi
 }
 
+check_glibc () {
+    local req=2.18 line
+
+    read -r line < <(ldd --version)
+    line=${line##*[[:space:]]}
+
+    if [[ $line == 2.* ]]; then
+        version_le "$req" "$line" ||
+            here_warn "glibc $line is not supported." \
+                      "Mozilla builds require glibc $req at least."
+    else
+        here_warn 'cant figure out glibc version'
+    fi
+}
+
 usage () {
     local self=${BASH_SOURCE[0]##*/}
 
@@ -421,6 +444,8 @@ main () {
     [[ $HOSTTYPE == @(x86_64|i686) ]] ||
         bye 'Mozilla only provides packages for x86_64 and i686.' \
             "Your arch is $HOSTTYPE"
+
+    check_glibc
 
     (($#)) || usage
 
