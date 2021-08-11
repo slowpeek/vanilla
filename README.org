@@ -13,6 +13,9 @@ requires at least =bash 4.3=
 
 The only required step is creating the [[#base-dir][base dir]].
 
+With =lbzip2= installed you can significantly speed up decompression
+of downloaded packages.
+
 *  Usage
 
 #+begin_example
