@@ -354,13 +354,17 @@ getopt () {
     [[ $1 == map ]] || local -n map=$1
     shift
 
-    local short
-    printf -v short '%s' "${!map[@]}"
+    local i n=${#map[@]} short='' long=''
+    for ((i=0; i<n; i+=2)); do
+        short+=${map[i]}
+        long+=,${map[i+1]}
+    done
+
     short=${short//-}           # '-' is used for long options without
                                 # a short alias
+    long=${long:1}              # Trim leading comma.
 
-    local IFS=,
-    command getopt -o "+$short" -l "${map[*]}" -- "$@"
+    command getopt -o "+$short" -l "$long" -- "$@"
 }
 
 set_pkg () {
@@ -457,9 +461,9 @@ main () {
 
     (($#)) || usage
 
-    local -A map=(
-        [d]=download [i]=install [s]=select [-]=list-langs
-        [l:]=lang: [b:]=base:
+    local map=(
+        d download i install s select - list-langs
+        l: lang: b: base:
     )
 
     local opts
