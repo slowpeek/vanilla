@@ -111,7 +111,9 @@ The script runs in such modes:
   some kind of support (Ubuntu [[https://ubuntu.com/security/esm][ESM]]) but the updates no longer cover
   Firefox and Thunderbird.
 
-- But there are snaps, flatpaks etc :: One more option to chose from.
+- But there are snaps, flatpaks :: One more option to chose
+  from. Besides one might want to run Firefox under [[https://github.com/netblue30/firejail][firejail]] which is
+  not possible in combination with those sandboxing solutions.
 
 - Why not use built-in Firefox/Thunderbird upgrades :: I dont like the
   idea of self modifying software especially in case of a browser.
