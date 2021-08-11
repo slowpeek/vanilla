@@ -245,6 +245,9 @@ select_version () {
     [[ -v installed ]] || bye 'nothing to select from'
 
     local link=$base/$name link_action=create cur=
+    readonly link               # Protect from unintended changes
+                                # since it is used below with ln -sf.
+
     if [[ -h $link ]]; then
         cur=$(readlink "$link")
         [[ $cur == $pkg-* ]] || bye "'$link' target looks invalid"
@@ -285,9 +288,9 @@ select_version () {
 
     w_dir "$base"
 
-    ln -sfT "$pkg-$sel" "$base/$name" || bye "cant $link_action '$link'"
+    ln -sfT "$pkg-$sel" "$link" || bye "cant $link_action '$link'"
 
-    here_success "${link_action} link: $name => $pkg-$sel"
+    here_success "$link_action link: $name => $pkg-$sel"
 
     here_unprefix
 }
