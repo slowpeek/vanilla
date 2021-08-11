@@ -16,7 +16,7 @@ The only required step is creating the [[#base-dir][base dir]].
 With =lbzip2= installed you can significantly speed up decompression
 of downloaded packages.
 
-*  Usage
+* Usage
 
 #+begin_example
   mozilla-update [--lang <lang>] [--base <dir>] <package>
@@ -94,9 +94,9 @@ The script runs in such modes:
 
   Example: =mozilla-update --list-langs firefox=
 
-- upgrade mode :: If none of the above were used, try to upgrade a
-  package and refresh its symlink in the case. *This is what the most
-  users would use.*
+- upgrade mode :: If none of the above were used, try to upgrade (or
+  install) a package and refresh its symlink in the base dir in the
+  case. *This is what the most users would use.*
 
   Example: =mozilla-update firefox=
 
