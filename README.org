@@ -102,6 +102,13 @@ The script runs in such modes:
 
 * FAQ
 
+- Why not just use Mozilla stuff bundled with distro X? :: There are
+  outdated systems like Ubuntu 14.04 which are still used and recieve
+  some kind of support (Ubuntu [[https://ubuntu.com/security/esm][ESM]]) but the updates no longer cover
+  Firefox and Thunderbird.
+
+- But there are snaps, flatpaks etc :: One more option to chose from.
+
 - Why not use built-in Firefox/Thunderbird upgrades :: I dont like the
   idea of self modifying software especially in case of a browser.
 
