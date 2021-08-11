@@ -551,7 +551,7 @@ main () {
     eval set -- "$opts"
     unset -v opts map
 
-    local mode=default lang=en-US base=/opt/mozilla search=n
+    local mode=default lang=en-US base=/opt/mozilla search=n custom_base=n
 
     while true; do
         case $1 in
@@ -583,6 +583,7 @@ main () {
                 ;;
             -b|--base)
                 base=$2
+                custom_base=y
                 shift
                 ;;
         esac
@@ -590,7 +591,8 @@ main () {
         shift
     done
 
-    if [[ $mode == !(langs|desktop) ]]; then
+    # Always check base dir if -b/--base was supplied.
+    if [[ $mode == !(langs|desktop) || $custom_base == y ]]; then
         _dir "$base"
 
         # Ensure $base is an absolute path.
