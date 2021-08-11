@@ -389,7 +389,7 @@ check_reqs () {
             "Your arch is $HOSTTYPE"
 
     # glibc
-    local req=2.18 line
+    local req=2.17 line
 
     read -r line < <(ldd --version)
     line=${line##*[[:space:]]}

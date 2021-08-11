@@ -4,7 +4,7 @@ This script can be used to install and keep updated the official linux
 builds of [[https://download-installer.cdn.mozilla.net/pub/firefox/releases/][Firefox]] and [[https://download-installer.cdn.mozilla.net/pub/thunderbird/releases/][Thunderbird]]. Regular releases, betas and ESR
 (Firefox only) are supported.
 
-As of time of writing, the builds require =glibc 2.18=. It means for
+As of time of writing, the builds [[https://www.mozilla.org/en-US/firefox/91.0/system-requirements/][require]] =glibc 2.17=. It means for
 example Ubuntu 14.04 is the oldest supported Ubuntu and Debian 8 is
 the oldest supported Debian. With that limitation in mind the script
 requires at least =bash 4.3=
@@ -59,6 +59,10 @@ With some packages installed, the base dir layout looks like this:
 As you see there are multiple versions of some packages and some of
 those are targeted by non-versioned symlinks. You can interactively
 retarget the symlinks with =-s= / =--select= mode described below.
+
+The script doesnt remove anything from the base dir, upgrades just
+pile up there. You might want to delete outdated versions there from
+time to time.
 
 ** Languages
 
