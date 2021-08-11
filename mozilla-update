@@ -479,10 +479,15 @@ usage () {
     cat <<EOF
 USAGE
 
+Upgrade mode
     ${self} [--lang <lang>] [--base <dir>] <package>
+
+Steps of the upgrade mode
     ${self} --download [--lang <lang>] <package>
     ${self} --install [--base <dir>] <file>
     ${self} --select [--base <dir>] <package>
+
+Utils
     ${self} --list-langs <package>
     ${self} [--no-path] --desktop-file <package>
 

@@ -18,11 +18,23 @@ of downloaded packages.
 
 * Usage
 
+Upgrade mode
+
 #+begin_example
   mozilla-update [--lang <lang>] [--base <dir>] <package>
+#+end_example
+
+Steps of the upgrade mode
+
+#+begin_example
   mozilla-update --download [--lang <lang>] [--base <dir>] <package>
   mozilla-update --install [--base <dir>] <file>
   mozilla-update --select [--base <dir>] <package>
+#+end_example
+
+Utils
+
+#+begin_example
   mozilla-update --list-langs <package>
   mozilla-update [--no-path] --desktop-file <package>
 #+end_example
