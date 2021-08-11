@@ -24,6 +24,7 @@ of downloaded packages.
   mozilla-update --install [--base <dir>] <file>
   mozilla-update --select [--base <dir>] <package>
   mozilla-update --list-langs <package>
+  mozilla-update [--no-path] --desktop-file <package>
 #+end_example
 
 ** Packages
@@ -97,6 +98,13 @@ The script runs in such modes:
   package.
 
   Example: =mozilla-update --list-langs firefox=
+
+- =--desktop-file= :: Generate a desktop file for the package. By
+  default the =Exec= property contains a full path to the binary. With
+  =--no-path= it would be just a package name like =firefox= or
+  =firefox-esr=.
+
+Example: =mozilla-update --desktop-file firefox=
 
 - upgrade mode :: If none of the above were used, try to upgrade (or
   install) a package and refresh its symlink in the base dir in the

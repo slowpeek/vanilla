@@ -315,6 +315,72 @@ list_langs () {
     here_unprefix
 }
 
+desktop_file () {
+    local app_name=${pkg^}
+
+    case $type in
+        beta)
+            app_name+=' Beta'
+            ;;
+        esr)
+            app_name+=' ESR'
+            ;;
+    esac
+
+    local exec=${name}
+    [[ $search == y ]] || exec=$base/$name/$pkg
+
+    local icon=${base}/${name}/chrome/icons/default/default128.png
+
+    if [[ $pkg == firefox* ]]; then
+        cat <<EOF
+[Desktop Entry]
+Version=1.0
+Name=${app_name}
+Exec=${exec} %u
+Categories=Network;WebBrowser;
+Type=Application
+MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/chrome;video/webm;application/x-xpinstall;
+Icon=${icon}
+Terminal=false
+StartupNotify=true
+Actions=new-window;new-private-window;
+
+[Desktop Action new-window]
+Name=Open a new window
+Exec=${exec} -new-window
+
+[Desktop Action new-private-window]
+Name=Open a new private window
+Exec=${exec} -private-window
+
+EOF
+    else
+        cat <<EOF
+[Desktop Entry]
+Version=1.0
+Name=${app_name}
+Exec=${exec} %u
+Categories=Network;Email;
+Type=Application
+MimeType=x-scheme-handler/mailto;application/x-xpinstall;
+Icon=${icon}
+Terminal=false
+StartupNotify=true
+Actions=compose;contacts
+
+[Desktop Action compose]
+Name=Compose new message
+Exec=${exec} -compose
+
+[Desktop Action contacts]
+Name=Contacts
+Exec=${exec} -addressbook
+
+EOF
+    fi
+}
+
 install_file () {
     here_prefix install
 
@@ -418,6 +484,7 @@ USAGE
     ${self} --install [--base <dir>] <file>
     ${self} --select [--base <dir>] <package>
     ${self} --list-langs <package>
+    ${self} [--no-path] --desktop-file <package>
 
 Package is one of: firefox, firefox-beta, firefox-esr, thunderbird,
 thunderbird-beta.
@@ -436,6 +503,11 @@ Settings
 -l --lang <lang>
     Package language to download. By default 'en-US'.
 
+--no-path
+    Only applicable to --desktop-file. By default the 'Exec' property
+    contains a full path to the binary. With this option it would be
+    just a package name like 'firefox' or 'firefox-esr'.
+
 Actions
 
 -d --download
@@ -452,6 +524,9 @@ Actions
 --list-langs
     List available languages for the latest version of a package.
 
+--desktop-file
+    Generate a desktop file for the package.
+
 EOF
     exit
 }
@@ -462,8 +537,8 @@ main () {
     (($#)) || usage
 
     local map=(
-        d download i install s select - list-langs
-        l: lang: b: base:
+        d download i install s select - list-langs - desktop-file
+        l: lang: b: base: - no-path
     )
 
     local opts
@@ -471,7 +546,7 @@ main () {
     eval set -- "$opts"
     unset -v opts map
 
-    local mode=default lang=en-US base=/opt/mozilla
+    local mode=default lang=en-US base=/opt/mozilla search=n
 
     while true; do
         case $1 in
@@ -491,6 +566,12 @@ main () {
             --list-langs)
                 mode=langs
                 ;;
+            --desktop-file)
+                mode=desktop
+                ;;
+            --no-path)
+                search=y
+                ;;
             -l|--lang)
                 lang=$2
                 shift
@@ -504,7 +585,7 @@ main () {
         shift
     done
 
-    if [[ $mode != langs ]]; then
+    if [[ $mode == !(langs|desktop) ]]; then
         _dir "$base"
 
         # Ensure $base is an absolute path.
@@ -537,6 +618,9 @@ main () {
             ;;
         'langs')
             list_langs
+            ;;
+        'desktop')
+            desktop_file
             ;;
         'default')
             local token=${BASH_SOURCE[0]##*/}
