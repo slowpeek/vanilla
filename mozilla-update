@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2015,SC1090
+# shellcheck disable=SC2015,SC1090,SC2191
 
 # MIT license (c) 2021 https://github.com/slowpeek
 # Homepage: https://github.com/slowpeek/mozilla-update
@@ -342,8 +342,9 @@ install_file () {
 
     need_bin bzip2 lbzip2
 
-    tar xf "$1" -C "$dir" --strip-components=1 --checkpoint=.400 ||
-        bye 'extract fail'
+    local args=(-C "$dir" --strip-components=1 --checkpoint=.400)
+    ! is_bin lbzip2 || args+=(-I lbzip2)
+    tar xf "$1" "${args[@]}" || bye 'extract fail'
 
     echo
     here_success 'extract OK'
