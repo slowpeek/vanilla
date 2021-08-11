@@ -515,49 +515,50 @@ main () {
         (($#)) || bye 'a file arg is required'
 
         install_file "$1"
-    else
-        (($#)) || bye 'a package name arg is required'
-
-        local name pkg type
-        set_pkg "$1"
-
-        local base_url=https://download-installer.cdn.mozilla.net/pub/$pkg/releases
-
-        case $mode in
-            'download')
-                download_latest
-                ;;
-            'select')
-                select_version
-                ;;
-            'langs')
-                list_langs
-                ;;
-            'default')
-                [[ -n ${TMPDIR:-} ]] || bye 'TMPDIR is not set or empty'
-
-                local token=${BASH_SOURCE[0]##*/}
-                token=${token%%.*}
-
-                # Readonly flag is used here to protect $dir from
-                # unintentional changes until the dir is deleted.
-                local -r dir=$TMPDIR/$token:$name
-
-                [[ -e $dir ]] && _dir "$dir" || mkdir "$dir"
-                pushd "$dir" >/dev/null
-
-                local file
-                download_latest file
-
-                install_file "$file"
-
-                (select_version -u <<< 1) || exit
-
-                popd >/dev/null
-                rm -r "$dir"
-                ;;
-        esac
+        return
     fi
+
+    (($#)) || bye 'a package name arg is required'
+
+    local name pkg type
+    set_pkg "$1"
+
+    local base_url=https://download-installer.cdn.mozilla.net/pub/$pkg/releases
+
+    case $mode in
+        'download')
+            download_latest
+            ;;
+        'select')
+            select_version
+            ;;
+        'langs')
+            list_langs
+            ;;
+        'default')
+            [[ -n ${TMPDIR:-} ]] || bye 'TMPDIR is not set or empty'
+
+            local token=${BASH_SOURCE[0]##*/}
+            token=${token%%.*}
+
+            # Readonly flag is used here to protect $dir from
+            # unintentional changes until the dir is deleted.
+            local -r dir=$TMPDIR/$token:$name
+
+            [[ -e $dir ]] && _dir "$dir" || mkdir "$dir"
+            pushd "$dir" >/dev/null
+
+            local file
+            download_latest file
+
+            install_file "$file"
+
+            (select_version -u <<< 1) || exit
+
+            popd >/dev/null
+            rm -r "$dir"
+            ;;
+    esac
 }
 
 [[ ! ${BASH_SOURCE[0]} == "$0" ]] || main "$@"
