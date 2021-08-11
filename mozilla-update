@@ -535,14 +535,12 @@ main () {
             list_langs
             ;;
         'default')
-            [[ -n ${TMPDIR:-} ]] || bye 'TMPDIR is not set or empty'
-
             local token=${BASH_SOURCE[0]##*/}
             token=${token%%.*}
 
             # Readonly flag is used here to protect $dir from
             # unintentional changes until the dir is deleted.
-            local -r dir=$TMPDIR/$token:$name
+            local -r dir=${TMPDIR:-/tmp}/$token:$name
 
             [[ -e $dir ]] && _dir "$dir" || mkdir "$dir"
             pushd "$dir" >/dev/null
