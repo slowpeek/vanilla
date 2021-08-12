@@ -209,20 +209,31 @@ download_latest () {
         exit
     fi
 
-    local fn=$pkg-$latest.tar.bz2 args=() f
+    __on_error () {
+        rm -f "$fn"             # Remove partially downloaded file.
 
-    for f in "$fn"{,.asc}; do
-        [[ -e $f ]] || args+=(-O "$base_url/$latest/linux-$HOSTTYPE/$lang/$f")
+        if [[ $1 == sigint ]]; then
+            echo >&2
+            bye 'interrupted'
+        fi
+
+        bye 'curl error'
+    }
+
+    local fn n=0
+    for fn in "$pkg-$latest.tar.bz2"{.asc,}; do
+        [[ ! -e $fn ]] || continue
+
+        ((n++)) || [[ -w . ]] || bye "'$PWD' is not writable"
+
+        trap '__on_error sigint' SIGINT
+        curl -O "$base_url/$latest/linux-$HOSTTYPE/$lang/$fn" || __on_error error
+        trap SIGINT
     done
 
-    if [[ -v args ]]; then
-        [[ -w . ]] || bye "'$PWD' is not writable"
+    unset -f __on_error
 
-        curl "${args[@]}" || bye 'curl error'
-        here_success "$((${#args[@]} >> 1)) files fetched"
-    else
-        here 'skip fetch'
-    fi
+    ((n)) && here_success "$n files fetched" || here 'skip fetch'
 
     check_gpg_key
 
