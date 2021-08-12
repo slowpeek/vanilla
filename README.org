@@ -18,17 +18,17 @@ of downloaded packages.
 
 * Usage
 
-Upgrade
+Install or upgrade
 
 #+begin_example
-  vanilla upgrade [--lang <lang>] [--base <dir>] <package>
+  vanilla install [--lang <lang>] [--base <dir>] <package>
 #+end_example
 
-Step by step upgrade
+Step by step install
 
 #+begin_example
   vanilla download [--lang <lang>] [--base <dir>] <package>
-  vanilla install [--base <dir>] <file>
+  vanilla install-file [--base <dir>] <file>
   vanilla select [--base <dir>] <package>
 #+end_example
 
@@ -88,10 +88,10 @@ languages for a package.
 
 If run without any args, the script just prints the usage text.
 
-- upgrade :: Try to upgrade (or install) a package and refresh its
-  symlink in the base dir in the case.
+- install :: Install or try to upgrade a package and refresh its
+  symlink in the base dir.
 
-  Example: =vanilla upgrade firefox=
+  Example: =vanilla install firefox=
 
 - download :: Download the latest version of a package into the
   current dir if only an update is available and verify the
@@ -101,10 +101,10 @@ If run without any args, the script just prints the usage text.
 
   Example: =vanilla download firefox=
 
-- install :: Install a previously downloaded archive into the base
-  dir.
+- install-file :: Install a previously downloaded archive into the
+  base dir.
 
-  Example: =vanilla install firefox-91.0.tar.bz2=
+  Example: =vanilla install-file firefox-91.0.tar.bz2=
 
 - select :: Interactively select the version for a package's symlink
   in the base dir.

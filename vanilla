@@ -396,7 +396,7 @@ EOF
 }
 
 install_file () {
-    here_prefix install
+    here_prefix install-file
 
     [[ -f $1 ]] || bye "'$1' is not a regular file"
     [[ -r $1 ]] || bye "'$1' is not readable"
@@ -448,7 +448,7 @@ getopt () {
     command getopt -o "$short" -l "$long" -- "$@"
 }
 
-upgrade_latest () {
+install_latest () {
     local token=${BASH_SOURCE[0]##*/}
     token=${token%%.*}
 
@@ -516,12 +516,12 @@ usage () {
     cat <<EOF
 USAGE
 
-Upgrade
-    ${self} upgrade [--lang <lang>] [--base <dir>] <package>
+Install or upgrade
+    ${self} install [--lang <lang>] [--base <dir>] <package>
 
-Step by step upgrade
+Step by step install
     ${self} download [--lang <lang>] [--base <dir>] <package>
-    ${self} install [--base <dir>] <file>
+    ${self} install-file [--base <dir>] <file>
     ${self} select [--base <dir>] <package>
 
 Utils
@@ -551,15 +551,15 @@ Settings
 
 COMMANDS
 
-upgrade
-    Try to upgrade (or install) a package and refresh its symlink in
-    the base dir.
+install
+    Install or try to upgrade a package and refresh its symlink in the
+    base dir.
 
 download
     Download the latest version of a package into the current dir if
     only an update is available and verify the signature.
 
-install
+install-file
     Install a previously downloaded archive into the base dir.
 
 select
@@ -620,9 +620,9 @@ main () {
     shift
 
     local -A ctrl=(
-        [upgrade]=upgrade_latest
+        [install]=install_latest
         [download]=download_latest
-        [install]=self
+        [install-file]=self
         [select]=select_version
         [list-langs]=list_langs
         [desktop-file]=desktop_file
@@ -640,7 +640,7 @@ main () {
         fi
     fi
 
-    if [[ $mode == install ]]; then
+    if [[ $mode == install-file ]]; then
         (($#)) || bye 'file name is required'
 
         install_file "$1"
