@@ -434,6 +434,28 @@ getopt () {
     command getopt -o "$short" -l "$long" -- "$@"
 }
 
+upgrade_latest () {
+    local token=${BASH_SOURCE[0]##*/}
+    token=${token%%.*}
+
+    # Readonly flag is used here to protect $dir from unintentional
+    # changes until the dir is deleted.
+    local -r dir=${TMPDIR:-/tmp}/$token:$name
+
+    [[ -e $dir ]] && _dir "$dir" || mkdir "$dir"
+    pushd "$dir" >/dev/null
+
+    local file
+    download_latest file
+
+    install_file "$file"
+
+    (select_version -u <<< 1) || exit
+
+    popd >/dev/null
+    rm -r "$dir"
+}
+
 set_pkg () {
     name=${1,,}
 
@@ -554,7 +576,7 @@ main () {
     eval set -- "$opts"
     unset -v opts list
 
-    local lang=en-US base=/opt/mozilla search=n custom_base=n
+    local lang=en-US base=/opt/mozilla search=n
 
     while true; do
         case $1 in
@@ -571,7 +593,6 @@ main () {
                 ;;
             -b|--base)
                 base=$2
-                custom_base=y
                 shift
                 ;;
         esac
@@ -584,8 +605,18 @@ main () {
     local mode=$1
     shift
 
-    # Always check base dir if -b/--base was supplied.
-    if [[ $mode == !(list-langs|desktop-file) || $custom_base == y ]]; then
+    local -A ctrl=(
+        [upgrade]=upgrade_latest
+        [download]=download_latest
+        [install]=self
+        [select]=select_version
+        [list-langs]=list_langs
+        [desktop-file]=desktop_file
+    )
+
+    [[ -v ctrl[$mode] ]] || bye "unknown command '$mode'"
+
+    if [[ $mode != list-langs ]]; then
         _dir "$base"
 
         # Ensure $base is an absolute path.
@@ -609,43 +640,7 @@ main () {
 
     local base_url=https://download-installer.cdn.mozilla.net/pub/$pkg/releases
 
-    case $mode in
-        'download')
-            download_latest
-            ;;
-        'select')
-            select_version
-            ;;
-        'list-langs')
-            list_langs
-            ;;
-        'desktop-file')
-            desktop_file
-            ;;
-        'upgrade')
-            local token=${BASH_SOURCE[0]##*/}
-            token=${token%%.*}
-
-            # Readonly flag is used here to protect $dir from
-            # unintentional changes until the dir is deleted.
-            local -r dir=${TMPDIR:-/tmp}/$token:$name
-
-            [[ -e $dir ]] && _dir "$dir" || mkdir "$dir"
-            pushd "$dir" >/dev/null
-
-            local file
-            download_latest file
-
-            install_file "$file"
-
-            (select_version -u <<< 1) || exit
-
-            popd >/dev/null
-            rm -r "$dir"
-            ;;
-        *)
-            bye "unknown command '$mode'"
-    esac
+    "${ctrl[$mode]}"
 }
 
 [[ ! ${BASH_SOURCE[0]} == "$0" ]] || main "$@"
