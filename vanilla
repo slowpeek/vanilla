@@ -420,6 +420,7 @@ install_file () {
 }
 
 getopt () {
+    # shellcheck disable=SC2178
     [[ $1 == list ]] || local -n list=$1
     shift
 
