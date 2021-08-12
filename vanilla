@@ -140,7 +140,9 @@ installed_versions () {
     list=()
 
     local dir
-    for dir in $(cd "$base"; compgen -G "$pkg-*[0-9]*" | sort -Vr); do
+    for dir in $(cd "$base"; compgen -G "$pkg-[0-9]*/" | sort -Vr); do
+        dir=${dir::-1}
+
         if [[ $dir == *esr ]]; then
             [[ $type == esr ]] || continue
             list+=("$dir")
