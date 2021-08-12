@@ -418,13 +418,13 @@ install_file () {
 }
 
 getopt () {
-    [[ $1 == map ]] || local -n map=$1
+    [[ $1 == list ]] || local -n list=$1
     shift
 
-    local i n=${#map[@]} short='' long=''
+    local i n=${#list[@]} short='' long=''
     for ((i=0; i<n; i+=2)); do
-        short+=${map[i]}
-        long+=,${map[i+1]}
+        short+=${list[i]}
+        long+=,${list[i+1]}
     done
 
     short=${short//-}           # '-' is used for long options without
@@ -545,14 +545,14 @@ main () {
 
     (($#)) || usage
 
-    local map=(
+    local list=(
         l: lang: b: base: - no-path
     )
 
     local opts
-    opts=$(getopt map "$@") || bye 'options error'
+    opts=$(getopt list "$@") || bye 'options error'
     eval set -- "$opts"
-    unset -v opts map
+    unset -v opts list
 
     local lang=en-US base=/opt/mozilla search=n custom_base=n
 
