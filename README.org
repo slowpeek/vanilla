@@ -18,25 +18,25 @@ of downloaded packages.
 
 * Usage
 
-Upgrade mode
+Upgrade
 
 #+begin_example
-  vanilla [--lang <lang>] [--base <dir>] <package>
+  vanilla upgrade [--lang <lang>] [--base <dir>] <package>
 #+end_example
 
-Steps of the upgrade mode
+Step by step upgrade
 
 #+begin_example
-  vanilla --download [--lang <lang>] [--base <dir>] <package>
-  vanilla --install [--base <dir>] <file>
-  vanilla --select [--base <dir>] <package>
+  vanilla download [--lang <lang>] [--base <dir>] <package>
+  vanilla install [--base <dir>] <file>
+  vanilla select [--base <dir>] <package>
 #+end_example
 
 Utils
 
 #+begin_example
-  vanilla --list-langs <package>
-  vanilla [--no-path] --desktop-file <package>
+  vanilla list-langs <package>
+  vanilla desktop-file [--base <dir>] [--no-path] <package>
 #+end_example
 
 ** Packages
@@ -71,7 +71,7 @@ With some packages installed, the base dir layout looks like this:
 
 As you see there are multiple versions of some packages and some of
 those are targeted by non-versioned symlinks. You can interactively
-retarget the symlinks with =-s= / =--select= mode described below.
+retarget the symlinks with =select= command described below.
 
 The script doesnt remove anything from the base dir, upgrades just
 pile up there. You might want to delete outdated versions there from
@@ -81,50 +81,47 @@ time to time.
 
 Mozilla provides packages in many languages. By default the script
 uses =en-US= one. You can set a custom lang with =-l <lang>= / =--lang
-<lang>=. Use =--list-langs= option described below to list available
+<lang>=. Use =list-langs= command described below to list available
 languages for a package.
 
-** Modes
+** Commands
 
-The script runs in such modes:
+If run without any args, the script just prints the usage text.
 
-- usage mode :: If run without any args, just show the usage text.
+- upgrade :: Try to upgrade (or install) a package and refresh its
+  symlink in the base dir in the case.
 
-- =-d= / =--download= :: Download the latest version of a package into
-  the current dir if only an update is available and verify the
+  Example: =vanilla upgrade firefox=
+
+- download :: Download the latest version of a package into the
+  current dir if only an update is available and verify the
   signature. Even though it seemingly works in the current dir, =-b= /
   =--base= value still matters since it checks the base dir for the
   currently installed version.
 
-  Example: =vanilla -d firefox=
+  Example: =vanilla download firefox=
 
-- =-i= / =--install= :: Install a previously downloaded archive into
-  the base dir.
+- install :: Install a previously downloaded archive into the base
+  dir.
 
-  Example: =vanilla -i firefox-91.0.tar.bz2=
+  Example: =vanilla install firefox-91.0.tar.bz2=
 
-- =-s= / =--select= :: Interactively select version for a package's
-  symlink in the base dir.
+- select :: Interactively select the version for a package's symlink
+  in the base dir.
 
-  Example: =vanilla -s firefox=
+  Example: =vanilla select firefox=
 
-- =--list-langs= :: List available languages for the latest version of a
+- list-langs :: List available languages for the latest version of a
   package.
 
-  Example: =vanilla --list-langs firefox=
+  Example: =vanilla list-langs firefox=
 
-- =--desktop-file= :: Generate a desktop file for the package. By
+- desktop-file :: Generate a desktop file for the package. By
   default the =Exec= property contains a full path to the binary. With
   =--no-path= it would be just a package name like =firefox= or
   =firefox-esr=.
 
-  Example: =vanilla --desktop-file firefox=
-
-- upgrade mode :: If none of the above were used, try to upgrade (or
-  install) a package and refresh its symlink in the base dir in the
-  case. *This is what the most users would use.*
-
-  Example: =vanilla firefox=
+  Example: =vanilla desktop-file firefox=
 
 * FAQ
 

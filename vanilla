@@ -431,7 +431,7 @@ getopt () {
                                 # a short alias
     long=${long:1}              # Trim leading comma.
 
-    command getopt -o "+$short" -l "$long" -- "$@"
+    command getopt -o "$short" -l "$long" -- "$@"
 }
 
 set_pkg () {
@@ -480,23 +480,20 @@ usage () {
     cat <<EOF
 USAGE
 
-Upgrade mode
-    ${self} [--lang <lang>] [--base <dir>] <package>
+Upgrade
+    ${self} upgrade [--lang <lang>] [--base <dir>] <package>
 
-Steps of the upgrade mode
-    ${self} --download [--lang <lang>] <package>
-    ${self} --install [--base <dir>] <file>
-    ${self} --select [--base <dir>] <package>
+Step by step upgrade
+    ${self} download [--lang <lang>] [--base <dir>] <package>
+    ${self} install [--base <dir>] <file>
+    ${self} select [--base <dir>] <package>
 
 Utils
-    ${self} --list-langs <package>
-    ${self} [--no-path] --desktop-file <package>
+    ${self} list-langs <package>
+    ${self} desktop-file [--base <dir>] [--no-path] <package>
 
 Package is one of: firefox, firefox-beta, firefox-esr, thunderbird,
 thunderbird-beta.
-
-By default try to download and install the latest version of a package
-in 'en-US' language into '/opt/mozilla' and refresh the symlink there.
 
 
 OPTIONS SUMMARY
@@ -510,27 +507,33 @@ Settings
     Package language to download. By default 'en-US'.
 
 --no-path
-    Only applicable to --desktop-file. By default the 'Exec' property
-    contains a full path to the binary. With this option it would be
-    just a package name like 'firefox' or 'firefox-esr'.
+    Only applicable to the 'desktop-file' command. By default the
+    'Exec' property contains a full path to the binary. With this
+    option it would be just a package name like 'firefox' or
+    'firefox-esr'.
 
-Actions
 
--d --download
+COMMANDS
+
+upgrade
+    Try to upgrade (or install) a package and refresh its symlink in
+    the base dir.
+
+download
     Download the latest version of a package into the current dir if
     only an update is available and verify the signature.
 
--i --install
+install
     Install a previously downloaded archive into the base dir.
 
--s --select
-    Interactively select version for a package's symlink in the base
+select
+    Interactively select the version for a package's symlink in the base
     dir.
 
---list-langs
+list-langs
     List available languages for the latest version of a package.
 
---desktop-file
+desktop-file
     Generate a desktop file for the package.
 
 EOF
@@ -543,7 +546,6 @@ main () {
     (($#)) || usage
 
     local map=(
-        d download i install s select - list-langs - desktop-file
         l: lang: b: base: - no-path
     )
 
@@ -552,28 +554,13 @@ main () {
     eval set -- "$opts"
     unset -v opts map
 
-    local mode=default lang=en-US base=/opt/mozilla search=n custom_base=n
+    local lang=en-US base=/opt/mozilla search=n custom_base=n
 
     while true; do
         case $1 in
             --)
                 shift
                 break
-                ;;
-            -d|--download)
-                mode=download
-                ;;
-            -i|--install)
-                mode=install
-                ;;
-            -s|--select)
-                mode=select
-                ;;
-            --list-langs)
-                mode=langs
-                ;;
-            --desktop-file)
-                mode=desktop
                 ;;
             --no-path)
                 search=y
@@ -592,8 +579,13 @@ main () {
         shift
     done
 
+    (($#)) || bye 'command name is required'
+
+    local mode=$1
+    shift
+
     # Always check base dir if -b/--base was supplied.
-    if [[ $mode == !(langs|desktop) || $custom_base == y ]]; then
+    if [[ $mode == !(list-langs|desktop-file) || $custom_base == y ]]; then
         _dir "$base"
 
         # Ensure $base is an absolute path.
@@ -604,13 +596,13 @@ main () {
     fi
 
     if [[ $mode == install ]]; then
-        (($#)) || bye 'a file arg is required'
+        (($#)) || bye 'file name is required'
 
         install_file "$1"
         return
     fi
 
-    (($#)) || bye 'a package name arg is required'
+    (($#)) || bye 'package name is required'
 
     local name pkg type
     set_pkg "$1"
@@ -624,13 +616,13 @@ main () {
         'select')
             select_version
             ;;
-        'langs')
+        'list-langs')
             list_langs
             ;;
-        'desktop')
+        'desktop-file')
             desktop_file
             ;;
-        'default')
+        'upgrade')
             local token=${BASH_SOURCE[0]##*/}
             token=${token%%.*}
 
@@ -651,6 +643,8 @@ main () {
             popd >/dev/null
             rm -r "$dir"
             ;;
+        *)
+            bye "unknown command '$mode'"
     esac
 }
 
