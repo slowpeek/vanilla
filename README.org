@@ -21,22 +21,22 @@ of downloaded packages.
 Upgrade mode
 
 #+begin_example
-  mozilla-update [--lang <lang>] [--base <dir>] <package>
+  vanilla [--lang <lang>] [--base <dir>] <package>
 #+end_example
 
 Steps of the upgrade mode
 
 #+begin_example
-  mozilla-update --download [--lang <lang>] [--base <dir>] <package>
-  mozilla-update --install [--base <dir>] <file>
-  mozilla-update --select [--base <dir>] <package>
+  vanilla --download [--lang <lang>] [--base <dir>] <package>
+  vanilla --install [--base <dir>] <file>
+  vanilla --select [--base <dir>] <package>
 #+end_example
 
 Utils
 
 #+begin_example
-  mozilla-update --list-langs <package>
-  mozilla-update [--no-path] --desktop-file <package>
+  vanilla --list-langs <package>
+  vanilla [--no-path] --desktop-file <package>
 #+end_example
 
 ** Packages
@@ -96,35 +96,35 @@ The script runs in such modes:
   =--base= value still matters since it checks the base dir for the
   currently installed version.
 
-  Example: =mozilla-update -d firefox=
+  Example: =vanilla -d firefox=
 
 - =-i= / =--install= :: Install a previously downloaded archive into
   the base dir.
 
-  Example: =mozilla-update -i firefox-91.0.tar.bz2=
+  Example: =vanilla -i firefox-91.0.tar.bz2=
 
 - =-s= / =--select= :: Interactively select version for a package's
   symlink in the base dir.
 
-  Example: =mozilla-update -s firefox=
+  Example: =vanilla -s firefox=
 
 - =--list-langs= :: List available languages for the latest version of a
   package.
 
-  Example: =mozilla-update --list-langs firefox=
+  Example: =vanilla --list-langs firefox=
 
 - =--desktop-file= :: Generate a desktop file for the package. By
   default the =Exec= property contains a full path to the binary. With
   =--no-path= it would be just a package name like =firefox= or
   =firefox-esr=.
 
-  Example: =mozilla-update --desktop-file firefox=
+  Example: =vanilla --desktop-file firefox=
 
 - upgrade mode :: If none of the above were used, try to upgrade (or
   install) a package and refresh its symlink in the base dir in the
   case. *This is what the most users would use.*
 
-  Example: =mozilla-update firefox=
+  Example: =vanilla firefox=
 
 * FAQ
 
