@@ -35,6 +35,7 @@ Step by step install
 Utils
 
 #+begin_example
+  vanilla list-installed [package]
   vanilla list-langs <package>
   vanilla desktop-file [--base <dir>] [--no-path] <package>
 #+end_example
@@ -110,6 +111,11 @@ If run without any args, the script just prints the usage text.
   in the base dir.
 
   Example: =vanilla select firefox=
+
+- list-installed :: List installed versions for a package or all
+  packages.
+
+  Example: =vanilla list-installed=
 
 - list-langs :: List available languages for the latest version of a
   package.

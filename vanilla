@@ -95,7 +95,7 @@ here_success () {
 }
 
 here_warn () {
-    here_colorful  $'\e[33m' warning "$@"
+    here_colorful $'\e[33m' warning "$@"
 }
 
 bye () {
@@ -171,6 +171,37 @@ installed_versions () {
     done
 
     [[ ! -v list ]] || list=("${list[@]#*-}")
+}
+
+list_installed () {
+    here_prefix list-installed
+
+    local name pkg type list sel empty=y
+    for name; do
+        set_pkg "$name"
+
+        installed_versions list
+        [[ -v list ]] || continue
+
+        empty=n
+
+        # Mark selected versions.
+        if test -h "$base/$name"; then
+            sel=$(readlink "$_")
+
+            if [[ $sel == "$pkg"-* ]]; then
+                sel=${sel#*-}
+                list=("${list[@]/%$sel/$sel*}")
+            fi
+        fi
+
+        echo "$name"
+        printf '    %s\n' "${list[@]}"
+        echo
+    done
+
+    [[ $empty == n ]] || here_warn 'nothing to list' >&2
+    here_unprefix
 }
 
 latest_version () {
@@ -620,6 +651,7 @@ main () {
         [download]=download_latest
         [install-file]=self
         [select]=select_version
+        [list-installed]=self
         [list-langs]=list_langs
         [desktop-file]=desktop_file
     )
@@ -636,12 +668,21 @@ main () {
         fi
     fi
 
-    if [[ $mode == install-file ]]; then
-        (($#)) || bye 'file name is required'
+    case $mode in
+        install-file)
+            (($#)) || bye 'file name is required'
 
-        install_file "$1"
-        return
-    fi
+            install_file "$1"
+            return
+            ;;
+
+        list-installed)
+            local args
+            (($#)) && args=("$1") || args=(firefox{,-esr,-beta} thunderbird{,-beta})
+            list_installed "${args[@]}"
+            return
+            ;;
+    esac
 
     (($#)) || bye 'package name is required'
 
