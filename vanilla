@@ -482,21 +482,24 @@ install_file () {
 }
 
 getopt () {
-    # shellcheck disable=SC2178
-    [[ $1 == list ]] || local -n list=$1
-    shift
+    local s p short='' long=''
 
-    local i n=${#list[@]} short='' long=''
-    for ((i=0; i<n; i+=2)); do
-        short+=${list[i]}
-        long+=,${list[i+1]}
+    while (($#)); do
+        s=$1 p=
+        shift
+
+        [[ ! $s == -- ]] || break
+
+        if [[ $s == *: ]]; then
+            p=:
+            s=${s::-1}
+        fi
+
+        [[ $s == -* ]] || short+=${s::1}$p
+        test -z "${s:1}" || long+=,$_$p
     done
 
-    short=${short//-}           # '-' is used for long options without
-                                # a short alias
-    long=${long:1}              # Trim leading comma.
-
-    command getopt -o "$short" -l "$long" -- "$@"
+    command getopt -o "$short" -l "${long:1}" -- "$@"
 }
 
 install_latest () {
@@ -628,14 +631,8 @@ main () {
 
     (($#)) || usage
 
-    local list=(
-        l: lang: b: base: - no-path
-    )
-
-    local opts
-    opts=$(getopt list "$@") || bye 'options error'
-    eval set -- "$opts"
-    unset -v opts list
+    test -n "$(getopt llang: bbase: -no-path -- "$@")" || bye 'options error'
+    eval set -- "$_"
 
     local lang=${VANILLA_LANG-en-US} base=${VANILLA_BASE-/opt/mozilla}
     local search=n
