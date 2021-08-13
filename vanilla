@@ -306,21 +306,23 @@ select_version () {
         exit
     fi
 
-    local link=$base/$name link_action=create cur=
+    local link=$base/$name link_action=set cur=
     readonly link               # Protect from unintended changes
                                 # since it is used below with ln -sf.
 
     if [[ -h $link ]]; then
         cur=$(readlink "$link")
-        [[ $cur == $pkg-* ]] || bye "'$link' target looks invalid"
 
-        cur=${cur#*-}
-        link_action=update
+        if [[ $cur == "$pkg"-* ]]; then
+            cur=${cur#*-}
+            installed=("${installed[@]/%$cur/$cur*}")
+            link_action=update
+        else
+            cur=
+        fi
     else
-      [[ ! -e $link ]] || bye "'$link' must be a symlink"
+      [[ ! -e $link ]] || bye "'$link' is not a symlink"
     fi
-
-    [[ -z $cur ]] || installed=("${installed[@]/%$cur/$cur*}")
 
     # '-u' for unattended mode.
     if [[ ${1-} != -u ]]; then
