@@ -85,6 +85,11 @@ uses =en-US= one. You can set a custom lang with =-l <lang>= / =--lang
 <lang>=. Use =list-langs= command described below to list available
 languages for a package.
 
+** Env vars
+
+- VANILLA_BASE
+- VANILLA_LANG
+
 ** Commands
 
 If run without any args, the script just prints the usage text.

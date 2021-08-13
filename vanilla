@@ -557,6 +557,7 @@ Step by step install
     ${self} select [--base <dir>] <package>
 
 Utils
+    ${self} list-installed [package]
     ${self} list-langs <package>
     ${self} desktop-file [--base <dir>] [--no-path] <package>
 
@@ -565,8 +566,6 @@ thunderbird-beta.
 
 
 OPTIONS SUMMARY
-
-Settings
 
 -b --base <dir>
     Base dir for installations. By default '/opt/mozilla'.
@@ -579,6 +578,12 @@ Settings
     'Exec' property contains a full path to the binary. With this
     option it would be just a package name like 'firefox' or
     'firefox-esr'.
+
+
+ENV VARS
+
+    VANILLA_BASE
+    VANILLA_LANG
 
 
 COMMANDS
@@ -597,6 +602,9 @@ install-file
 select
     Interactively select the version for a package's symlink in the base
     dir.
+
+list-installed
+    List installed versions for a package or all packages.
 
 list-langs
     List available languages for the latest version of a package.
@@ -622,7 +630,8 @@ main () {
     eval set -- "$opts"
     unset -v opts list
 
-    local lang=en-US base=/opt/mozilla search=n
+    local lang=${VANILLA_LANG:-en-US} base=${VANILLA_BASE:-/opt/mozilla}
+    local search=n
 
     while true; do
         case $1 in
