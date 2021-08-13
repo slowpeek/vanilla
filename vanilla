@@ -301,7 +301,10 @@ select_version () {
     local installed
     installed_versions installed
 
-    [[ -v installed ]] || bye 'nothing to select from'
+    if [[ ! -v installed ]]; then
+        here_warn 'nothing to select from' >&2
+        exit
+    fi
 
     local link=$base/$name link_action=create cur=
     readonly link               # Protect from unintended changes
