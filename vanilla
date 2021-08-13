@@ -471,17 +471,15 @@ install_latest () {
 }
 
 set_pkg () {
-    name=${1,,}
-
     local -A names=(
         [firefox]=t [firefox-beta]=t [firefox-esr]=t
         [thunderbird]=t [thunderbird-beta]=t
     )
 
-    [[ -v names[$name] ]] || bye "valid package names are: ${!names[*]}"
+    [[ -v names[$1] ]] || bye "valid package names are: ${!names[*]}"
 
-    pkg=${name%-*}
-    [[ $pkg == "$name" ]] && type=release || type=${name#*-}
+    pkg=${1%-*}
+    [[ $pkg == "$1" ]] && type=release || type=${1#*-}
 }
 
 check_reqs () {
