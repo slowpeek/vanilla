@@ -645,8 +645,8 @@ main () {
 
     (($#)) || bye 'package name is required'
 
-    local name pkg type
-    set_pkg "$1"
+    local name=$1 pkg type
+    set_pkg "$name"
 
     local base_url=https://download-installer.cdn.mozilla.net/pub/$pkg/releases
 
