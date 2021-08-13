@@ -542,6 +542,13 @@ check_reqs () {
     fi
 }
 
+check_empty () {
+    while (($#)); do
+        [[ -n ${!1} ]] || bye "--$1 value cant be empty"
+        shift
+    done
+}
+
 usage () {
     local self=${BASH_SOURCE[0]##*/}
 
@@ -630,7 +637,7 @@ main () {
     eval set -- "$opts"
     unset -v opts list
 
-    local lang=${VANILLA_LANG:-en-US} base=${VANILLA_BASE:-/opt/mozilla}
+    local lang=${VANILLA_LANG-en-US} base=${VANILLA_BASE-/opt/mozilla}
     local search=n
 
     while true; do
@@ -654,6 +661,8 @@ main () {
 
         shift
     done
+
+    check_empty lang base
 
     (($#)) || bye 'command name is required'
 
