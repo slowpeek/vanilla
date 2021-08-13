@@ -133,6 +133,21 @@ _dir () { [[ -d $1 ]] || bye "'$1' is not a dir"; }
 w_dir () { [[ -w $1 && -x $1 ]] || bye "'$1' is not writable"; }
 r_dir () { [[ -r $1 && -x $1 ]] || bye "'$1' is not readable"; }
 
+set_pkg () {
+    local name names
+    for name in firefox{,-esr,-beta} thunderbird{,-beta}; do
+        if [[ $1 == "$name" ]]; then
+            pkg=${1%-*}
+            [[ $pkg == "$1" ]] && type=release || type=${1#*-}
+            return
+        fi
+
+        names+=("$name")
+    done
+
+    bye "valid package names are: ${names[*]}"
+}
+
 installed_versions () {
     r_dir "$base"
 
@@ -468,18 +483,6 @@ install_latest () {
 
     popd >/dev/null
     rm -r "$dir"
-}
-
-set_pkg () {
-    local -A names=(
-        [firefox]=t [firefox-beta]=t [firefox-esr]=t
-        [thunderbird]=t [thunderbird-beta]=t
-    )
-
-    [[ -v names[$1] ]] || bye "valid package names are: ${!names[*]}"
-
-    pkg=${1%-*}
-    [[ $pkg == "$1" ]] && type=release || type=${1#*-}
 }
 
 check_reqs () {
