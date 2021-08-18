@@ -370,6 +370,38 @@ select_version () {
     here_unprefix
 }
 
+delete_version () {
+    here_prefix delete
+
+    local choice
+    pick_version choice "Which version of $name to delete" || exit
+
+    if [[ -z $choice ]]; then
+        here 'no changes'
+        exit
+    fi
+
+    w_dir "$base"
+
+    local sel_best=n
+    if [[ $choice == *\* ]]; then
+        choice=${choice::-1}
+
+        sel_best=y
+        # Always remove the symlink along with the selected version so
+        # that if it was the only version installed there is no
+        # dangling symlink left.
+        rm "$base/$name" || bye "cant delete '$_'"
+    fi
+
+    rm -r "$base/$pkg-$choice" || bye "cant delete '$_'"
+
+    here_success "$pkg-$choice has been removed"
+    here_unprefix
+
+    [[ $sel_best == n ]] || select_version best
+}
+
 list_langs () {
     here_prefix langs
     here "pkg=$name"
@@ -684,6 +716,7 @@ main () {
         [download]=download_latest
         [install-file]=self
         [select]=select_version
+        [delete]=delete_version
         [list-installed]=self
         [list-langs]=list_langs
         [desktop-file]=desktop_file
