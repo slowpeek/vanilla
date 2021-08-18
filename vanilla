@@ -98,6 +98,10 @@ here_warn () {
     here_colorful $'\e[33m' warning "$@"
 }
 
+here_error () {
+    here_colorful $'\e[31m' error "$@"
+}
+
 bye () {
     local undo
     here_color $'\e[31m' error
@@ -170,6 +174,17 @@ installed_versions () {
         fi
     done
 
+    # Mark the selected version.
+    local sel
+    if test -h "$base/$name"; then
+        sel=$(readlink "$_")
+
+        if [[ $sel == "$pkg"-[0-9]* ]]; then
+            sel=${sel#*-}
+            list=("${list[@]/%$sel/$sel*}")
+        fi
+    fi
+
     [[ ! -v list ]] || list=("${list[@]#*-}")
 }
 
@@ -184,16 +199,6 @@ list_installed () {
         [[ -v list ]] || continue
 
         empty=n
-
-        # Mark selected versions.
-        if test -h "$base/$name"; then
-            sel=$(readlink "$_")
-
-            if [[ $sel == "$pkg"-* ]]; then
-                sel=${sel#*-}
-                list=("${list[@]/%$sel/$sel*}")
-            fi
-        fi
 
         echo "$name"
         printf '    %s\n' "${list[@]}"
@@ -242,15 +247,17 @@ download_latest () {
     here_prefix download
     here "pkg=$name lang=$lang"
 
-    local installed
+    local installed best=none
     installed_versions installed
-    here "installed version: ${installed:-none}"
+    [[ ! -v installed ]] || best=${installed[0]%\*}
+
+    here "installed version: $best"
 
     local latest
     latest_version latest
     here "latest version: $latest"
 
-    if [[ -v installed ]] && version_le "$latest" "$installed"; then
+    if [[ -v installed ]] && version_le "$latest" "$best"; then
         here 'no updates available'
         exit
     fi
@@ -295,65 +302,62 @@ download_latest () {
     here_unprefix
 }
 
+pick_version () {
+    [[ $1 == result ]] || local -n result=$1
+    result=
+
+    local list
+    installed_versions list
+
+    if [[ ! -v list ]]; then
+        here_warn 'the package is not installed' >&2
+        return 1
+    fi
+
+    echo -e "\n$2:\n"
+
+    local reply PS3=$'\nYour choice: '
+    select reply in "${list[@]}"; do
+        break
+    done <<< dummy
+
+    read -r reply || true
+    echo
+
+    if [[ -n $reply ]]; then
+        [[ $reply == [1-9]*([0-9]) ]] && ((reply <= ${#list[@]})) || {
+            here_error 'there was no such option'
+            return 1
+        }
+
+        # shellcheck disable=SC2034
+        result=${list[reply-1]}
+    fi
+}
+
 select_version () {
     here_prefix select
 
-    local installed
-    installed_versions installed
+    local choice
+    pick_version choice "Which version of $name the symlink should point to" || exit
 
-    if [[ ! -v installed ]]; then
-        here_warn 'nothing to select from' >&2
-        exit
-    fi
-
-    local link=$base/$name link_action=set cur=
-    readonly link               # Protect from unintended changes
-                                # since it is used below with ln -sf.
-
-    if [[ -h $link ]]; then
-        cur=$(readlink "$link")
-
-        if [[ $cur == "$pkg"-* ]]; then
-            cur=${cur#*-}
-            installed=("${installed[@]/%$cur/$cur*}")
-            link_action=update
-        else
-            cur=
-        fi
-    else
-      [[ ! -e $link ]] || bye "'$link' is not a symlink"
-    fi
-
-    # '-u' for unattended mode.
-    if [[ ${1-} != -u ]]; then
-        echo -e "\nWhich version of $name the symlink should point to:\n"
-
-        local sel PS3=$'\nYour choice: '
-        select sel in "${installed[@]}"; do
-            break
-        done <<< dummy
-    fi
-
-    read -r sel || true
-
-    [[ ${1-} == -u ]] || echo
-
-    if [[ -n $sel ]]; then
-        [[ $sel == [1-9]*([0-9]) ]] && ((sel <= ${#installed[@]})) ||
-            bye 'there was no such option'
-
-        sel=${installed[sel-1]%\*}
-    fi
-
-    if [[ -z $sel || $sel == "$cur" ]]; then
+    if [[ -z $choice || $choice == *\* ]]; then
         here 'no changes'
         exit
     fi
 
-    w_dir "$base"
-    ln -sfT "$pkg-$sel" "$link" || bye "cant $link_action '$link'"
+    local link=$base/$name link_action=set
 
-    here_success "$link_action link: $name => $pkg-$sel"
+    if [[ -h $link ]]; then
+        [[ ! $(readlink "$link") == "$pkg"-[0-9]* ]] || link_action=update
+    else
+      [[ ! -e $link ]] || bye "'$link' is not a symlink"
+    fi
+
+    w_dir "$base"
+    ln -sfT "$pkg-$choice" "$link" || bye "cant $link_action '$link'"
+
+    here_success "$link_action link: $name => $pkg-$choice"
     here_unprefix
 }
 
