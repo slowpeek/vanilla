@@ -309,6 +309,13 @@ pick_version () {
     local list
     installed_versions list
 
+    if [[ ${2-} == best ]]; then
+        [[ -v list ]] || return 0
+
+        result=${list[0]}
+        return
+    fi
+
     if [[ ! -v list ]]; then
         here_warn 'the package is not installed' >&2
         return 1
@@ -338,11 +345,13 @@ pick_version () {
 select_version () {
     here_prefix select
 
-    local choice
-    pick_version choice "Which version of $name the symlink should point to" || exit
+    local choice q=best
+    [[ ${1-} == best ]] || q="Which version of $name the symlink should point to"
+
+    pick_version choice "$q" || exit
 
     if [[ -z $choice || $choice == *\* ]]; then
-        here 'no changes'
+        [[ ${1-} == best ]] || here 'no changes'
         exit
     fi
 
@@ -522,7 +531,7 @@ install_latest () {
 
     install_file "$file"
 
-    (select_version -u <<< 1) || exit
+    (select_version best) || exit
 
     popd >/dev/null
     rm -r "$dir"
