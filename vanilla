@@ -652,10 +652,10 @@ Install or upgrade
 Step by step install
     ${self} download [--lang <lang>] [--base <dir>] <package>
     ${self} install-file [--base <dir>] <file>
-    ${self} select [--base <dir>] <package>
+    ${self} select [--base <dir>] [--fzf|--no-fzf] <package>
 
 Uninstall
-    ${self} delete [--base <dir>] <package>
+    ${self} delete [--base <dir>] [--fzf|--no-fzf] <package>
 
 Utils
     ${self} list-installed [package]
@@ -680,11 +680,15 @@ OPTIONS SUMMARY
     option it would be just a package name like 'firefox' or
     'firefox-esr'.
 
+--fzf --no-fzf
+    Override the default behavior of the interactive picker.
+
 
 ENV VARS
 
     VANILLA_BASE
     VANILLA_LANG
+    VANILLA_FZF
 
 
 COMMANDS

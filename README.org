@@ -29,13 +29,13 @@ Step by step install
 #+begin_example
   vanilla download [--lang <lang>] [--base <dir>] <package>
   vanilla install-file [--base <dir>] <file>
-  vanilla select [--base <dir>] <package>
+  vanilla select [--base <dir>] [--fzf|--no-fzf] <package>
 #+end_example
 
 Uninstall
 
 #+begin_example
-  vanilla delete [--base <dir>] <package>
+  vanilla delete [--base <dir>] [--fzf|--no-fzf] <package>
 #+end_example
 
 Utils
@@ -90,10 +90,20 @@ uses =en-US= one. You can set a custom lang with =-l <lang>= / =--lang
 <lang>=. Use =list-langs= command described below to list available
 languages for a package.
 
+** FZF usage
+
+By default the interactive picker uses =fzf= if available and version
+=0.20= at least. You can force it off with =--no-fzf=.
+
+In case =fzf= is older than =0.20=, the picker doesnt use =fzf= by
+default but you can force it to with =--fzf=. The code wasnt tested
+with older versions though.
+
 ** Env vars
 
 - VANILLA_BASE
 - VANILLA_LANG
+- VANILLA_FZF
 
 ** Commands
 
