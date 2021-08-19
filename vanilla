@@ -727,6 +727,9 @@ list-langs
 desktop-file
     Generate a desktop file for the package.
 
+
+More details at https://github.com/slowpeek/vanilla
+
 EOF
     exit
 }
