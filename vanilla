@@ -326,9 +326,9 @@ pick_version () {
         echo -e "\n$2:\n"
 
         local PS3=$'\nYour choice: '
-        select reply in "${list[@]}"; do
+        select _ in "${list[@]}"; do
             break
-        done <<< dummy
+        done <<< a
 
         read -r reply || true
         echo
@@ -739,8 +739,15 @@ main () {
 
     (($#)) || usage
 
-    test -n "$(getopt llang: bbase: -no-path -fzf -no-fzf -- "$@")" || bye 'options error'
+    local opts=(
+        llang: bbase:
+        -no-path
+        -fzf -no-fzf
+    )
+
+    test -n "$(getopt "${opts[@]}" -- "$@")" || bye 'options error'
     eval set -- "$_"
+    unset -v opts
 
     local lang=${VANILLA_LANG-en-US} base=${VANILLA_BASE-/opt/mozilla}
     local search=n fzf
