@@ -101,9 +101,13 @@ with older versions though.
 
 ** Env vars
 
-- VANILLA_BASE
-- VANILLA_LANG
-- VANILLA_FZF
+Some settings can be set with env vars instead of options. As usually,
+options override the corresponding vars if both are set.
+
+- VANILLA_BASE :: Same as =-b= / =--base=
+- VANILLA_LANG :: Same as =-l= / =--lang=
+- VANILLA_FZF :: =y= for =--fzf=, =n= for =--no-fzf=. Other values are
+  ignored.
 
 ** Commands
 
@@ -165,8 +169,8 @@ If run without any args, the script just prints the usage text.
   from. Besides one might want to run Firefox under [[https://github.com/netblue30/firejail][firejail]] which is
   not possible in combination with those sandboxing solutions.
 
-- Why not use built-in Firefox/Thunderbird upgrades :: I dont like the
-  idea of self modifying software especially in case of a browser.
+- Why not use built-in upgrades :: I dont like the idea of self
+  modifying software especially in case of a browser.
 
 - Why there is no thunderbird-esr package :: Thunderbird ESR is
   discontinued since 2014. Thunderbird tracks Firefox ESR [[https://wiki.mozilla.org/Release_Management/Calendar][schedule]]

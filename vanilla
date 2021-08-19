@@ -686,10 +686,17 @@ OPTIONS SUMMARY
 
 ENV VARS
 
-    VANILLA_BASE
-    VANILLA_LANG
-    VANILLA_FZF
+Some settings can be set with env vars instead of options. As usually,
+options override the corresponding vars if both are set.
 
+    VANILLA_BASE
+        Same as -b/--base
+
+    VANILLA_LANG
+        Same as -l/--lang
+
+    VANILLA_FZF
+        'y' for --fzf, 'n' for --no-fzf. Other values are ignored.
 
 COMMANDS
 
