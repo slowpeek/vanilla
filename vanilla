@@ -654,6 +654,9 @@ Step by step install
     ${self} install-file [--base <dir>] <file>
     ${self} select [--base <dir>] <package>
 
+Uninstall
+    ${self} delete [--base <dir>] <package>
+
 Utils
     ${self} list-installed [package]
     ${self} list-langs <package>
@@ -700,6 +703,10 @@ install-file
 select
     Interactively select the version for a package's symlink in the base
     dir.
+
+delete
+    Interactively select and delete a version of a package from the
+    base dir and adjust the package's symlink if needed.
 
 list-installed
     List installed versions for a package or all packages.

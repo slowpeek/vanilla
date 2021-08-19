@@ -32,6 +32,12 @@ Step by step install
   vanilla select [--base <dir>] <package>
 #+end_example
 
+Uninstall
+
+#+begin_example
+  vanilla delete [--base <dir>] <package>
+#+end_example
+
 Utils
 
 #+begin_example
@@ -72,11 +78,10 @@ With some packages installed, the base dir layout looks like this:
 
 As you see there are multiple versions of some packages and some of
 those are targeted by non-versioned symlinks. You can interactively
-retarget the symlinks with =select= command described below.
+retarget the symlinks with the =select= command described below.
 
-The script doesnt remove anything from the base dir, upgrades just
-pile up there. You might want to delete outdated versions there from
-time to time.
+The script doesnt remove anything from the base dir if not asked
+for. You might want to uninstall outdated versions from time to time.
 
 ** Languages
 
@@ -116,6 +121,11 @@ If run without any args, the script just prints the usage text.
   in the base dir.
 
   Example: =vanilla select firefox=
+
+- delete :: Interactively select and delete a version of a package
+  from the base dir and adjust the package's symlink if needed.
+
+  Example: =vanilla delete firefox=
 
 - list-installed :: List installed versions for a package or all
   packages.
