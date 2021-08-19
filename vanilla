@@ -345,8 +345,7 @@ pick_version () {
             --border
         )
 
-        local rest
-        read -r reply rest < \
+        read -r reply _ < \
              <(printf '%s\n' "${list[@]}" | cat -n | fzf "${fzf_args[@]}") || true
     fi
 
@@ -625,12 +624,12 @@ check_fzf () {
             return
         }
 
-    local req=0.20 ver rest
+    local req=0.20 ver
 
     # '0.20.0' in focal
     # '0.24 (dev)' in implish
     # '0.27.2 (8255aa2)' in arch
-    read -r ver rest < <(fzf --version)
+    read -r ver _ < <(fzf --version)
 
     [[ -z $custom ]] && ! version_le "$req" "$ver" || return 0
 
