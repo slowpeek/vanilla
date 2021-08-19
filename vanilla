@@ -321,15 +321,34 @@ pick_version () {
         return 1
     fi
 
-    echo -e "\n$2:\n"
+    local reply
+    if [[ $fzf == n ]]; then
+        echo -e "\n$2:\n"
 
-    local reply PS3=$'\nYour choice: '
-    select reply in "${list[@]}"; do
-        break
-    done <<< dummy
+        local PS3=$'\nYour choice: '
+        select reply in "${list[@]}"; do
+            break
+        done <<< dummy
 
-    read -r reply || true
-    echo
+        read -r reply || true
+        echo
+    else
+        local fzf_args=(
+            --phony
+            --with-nth=2..
+            --header="$2:"$'\n\n'
+            --prompt=''
+            --height="$((${#list[@]} + 6))"
+            --reverse
+            --no-info
+            --bind=change:clear-query
+            --border
+        )
+
+        local rest
+        read -r reply rest < \
+             <(printf '%s\n' "${list[@]}" | cat -n | fzf "${fzf_args[@]}") || true
+    fi
 
     if [[ -n $reply ]]; then
         [[ $reply == [1-9]*([0-9]) ]] && ((reply <= ${#list[@]})) || {
@@ -597,6 +616,30 @@ check_empty () {
     done
 }
 
+check_fzf () {
+    local custom=${fzf+y}
+    fzf=${fzf-y}
+
+    [[ $fzf == y ]] && is_bin fzf || {
+            fzf=n
+            return
+        }
+
+    local req=0.20 ver rest
+
+    # '0.20.0' in focal
+    # '0.24 (dev)' in implish
+    # '0.27.2 (8255aa2)' in arch
+    read -r ver rest < <(fzf --version)
+
+    [[ -z $custom ]] && ! version_le "$req" "$ver" || return 0
+
+    fzf=n
+
+    here_warn "You fzf is older than $req, the fzf picker is disabled by default."
+    here_warn 'You can force enable it with --fzf or hide this warning with --no-fzf'
+}
+
 usage () {
     local self=${BASH_SOURCE[0]##*/}
 
@@ -676,11 +719,13 @@ main () {
 
     (($#)) || usage
 
-    test -n "$(getopt llang: bbase: -no-path -- "$@")" || bye 'options error'
+    test -n "$(getopt llang: bbase: -no-path -fzf -no-fzf -- "$@")" || bye 'options error'
     eval set -- "$_"
 
     local lang=${VANILLA_LANG-en-US} base=${VANILLA_BASE-/opt/mozilla}
-    local search=n
+    local search=n fzf
+
+    [[ ! ${VANILLA_FZF-} == [yn] ]] || fzf=$VANILLA_FZF
 
     while true; do
         case $1 in
@@ -690,6 +735,12 @@ main () {
                 ;;
             --no-path)
                 search=y
+                ;;
+            --fzf)
+                fzf=y
+                ;;
+            --no-fzf)
+                fzf=n
                 ;;
             -l|--lang)
                 lang=$2
@@ -705,6 +756,7 @@ main () {
     done
 
     check_empty lang base
+    check_fzf
 
     (($#)) || bye 'command name is required'
 
