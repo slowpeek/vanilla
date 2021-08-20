@@ -5,12 +5,14 @@
 # Homepage: https://github.com/slowpeek/vanilla
 
 _ () {
+    unset -f _
+
     local v=("${BASH_VERSINFO[@]}")
     if ((v[0] < 4 || (v[0] == 4 && v[1] < 3))); then
         echo "This script requires bash 4.3. Yours is ${v[0]}.${v[1]}"
         exit 1
     fi
-}; _; unset -f _
+}; _
 
 set -eu
 
@@ -21,9 +23,11 @@ set -eu
 # Homepage: https://github.com/slowpeek/here-bye
 
 _ () {
+    unset -f _
+
     IFS=, read -r -a HERE_PREFIX <<< "${HERE_PREFIX-}"
     IFS=, read -r -a BYE_PREFIX <<< "${BYE_PREFIX-}"
-}; _; unset -f _
+}; _
 
 here () {
     if (($# > 0)); then
