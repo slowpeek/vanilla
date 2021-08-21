@@ -743,15 +743,15 @@ main () {
 
     (($#)) || usage
 
-    local opts=(
+    local norm opts=(
         llang: bbase:
         -no-path
         -fzf -no-fzf
     )
 
-    test -n "$(getopt "${opts[@]}" -- "$@")" || bye 'options error'
-    eval set -- "$_"
-    unset -v opts
+    norm="$(getopt "${opts[@]}" -- "$@")" || bye 'options error'
+    eval set -- "$norm"
+    unset -v opts norm
 
     local lang=${VANILLA_LANG-en-US} base=${VANILLA_BASE-/opt/mozilla}
     local search=n fzf
