@@ -619,6 +619,17 @@ check_empty () {
     done
 }
 
+check_num () {
+    [[ -v num ]] || return 0    # OK if not set
+
+    check_empty num -n
+
+    [[ $num == +([[:digit:]]) ]] || bye '-n value must be a non-negative number'
+
+    num=${num#${num%%[^0]*}}    # ltrim '0' to prevent octal syntax
+    [[ -n $num ]] || num=0
+}
+
 check_fzf () {
     local custom=${fzf+y}
     fzf=${fzf-y}
@@ -744,7 +755,7 @@ main () {
     (($#)) || usage
 
     local norm opts=(
-        llang: bbase:
+        llang: bbase: n:
         -no-path
         -fzf -no-fzf
     )
@@ -754,7 +765,7 @@ main () {
     unset -v opts norm
 
     local lang=${VANILLA_LANG-en-US} base=${VANILLA_BASE-/opt/mozilla}
-    local search=n fzf
+    local search=n fzf num
 
     [[ ! ${VANILLA_FZF-} == [yn] ]] || fzf=$VANILLA_FZF
 
@@ -781,12 +792,17 @@ main () {
                 base=$2
                 shift
                 ;;
+            -n)
+                num=$2
+                shift
+                ;;
         esac
 
         shift
     done
 
     check_empty lang '' base ''
+    check_num
     check_fzf
 
     (($#)) || bye 'command name is required'
