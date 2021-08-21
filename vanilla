@@ -614,8 +614,8 @@ check_reqs () {
 
 check_empty () {
     while (($#)); do
-        [[ -n ${!1} ]] || bye "--$1 value cant be empty"
-        shift
+        [[ -n ${!1} ]] || bye "${2:---$1} value cant be empty"
+        shift 2
     done
 }
 
@@ -786,7 +786,7 @@ main () {
         shift
     done
 
-    check_empty lang base
+    check_empty lang '' base ''
     check_fzf
 
     (($#)) || bye 'command name is required'
