@@ -36,7 +36,7 @@ Step by step install
 
 #+begin_example
   vanilla download [--lang <lang>] [--base <dir>] <package>
-  vanilla install-file [--base <dir>] <file>
+  vanilla extract [--base <dir>] <file>
   vanilla select [--base <dir>] [--fzf|--no-fzf] <package>
 #+end_example
 
@@ -50,9 +50,9 @@ Uninstall
 Utils
 
 #+begin_example
-  vanilla list-installed [package]
-  vanilla list-langs <package>
-  vanilla desktop-file [--base <dir>] [--no-path] <package>
+  vanilla list [package]
+  vanilla langs <package>
+  vanilla desktop [--base <dir>] [--no-path] <package>
 #+end_example
 
 ** Packages
@@ -96,7 +96,7 @@ for. You might want to uninstall outdated versions from time to time.
 
 Mozilla provides packages in many languages. By default the script
 uses =en-US= one. You can set a custom lang with =-l <lang>= / =--lang
-<lang>=. Use =list-langs= command described below to list available
+<lang>=. Use =langs= command described below to list available
 languages for a package.
 
 ** FZF usage
@@ -140,10 +140,10 @@ If run without any args, the script just prints the usage text.
 
   Example: =vanilla download firefox=
 
-- install-file :: Install a previously downloaded archive into the
-  base dir.
+- extract :: Extract a previously downloaded archive into the base
+  dir.
 
-  Example: =vanilla install-file firefox-91.0.tar.bz2=
+  Example: =vanilla extract firefox-91.0.tar.bz2=
 
 - select :: Interactively select the version for a package's symlink
   in the base dir.
@@ -159,22 +159,20 @@ If run without any args, the script just prints the usage text.
   default only 2 most recent versions are kept including the selected
   one. =-n= option can be used to change the default.
 
-- list-installed :: List installed versions for a package or all
-  packages.
+- list :: List installed versions for a package or all packages.
 
-  Example: =vanilla list-installed=
+  Example: =vanilla list=
 
-- list-langs :: List available languages for the latest version of a
+- langs :: List available languages for the latest version of a
   package.
 
-  Example: =vanilla list-langs firefox=
+  Example: =vanilla langs firefox=
 
-- desktop-file :: Generate a desktop file for the package. By
-  default the =Exec= property contains a full path to the binary. With
-  =--no-path= it would be just a package name like =firefox= or
-  =firefox-esr=.
+- desktop :: Generate a desktop file for the package. By default the
+  =Exec= property contains a full path to the binary. With =--no-path=
+  it would be just a package name like =firefox= or =firefox-esr=.
 
-  Example: =vanilla desktop-file firefox=
+  Example: =vanilla desktop firefox=
 
 * FAQ
 

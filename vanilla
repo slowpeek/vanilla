@@ -218,7 +218,7 @@ installed_versions () {
 }
 
 list_installed () {
-    here_prefix list-installed
+    here_prefix list
 
     local name pkg type list sel empty=y
     for name; do
@@ -580,7 +580,7 @@ EOF
 }
 
 install_file () {
-    here_prefix install-file
+    here_prefix extract
 
     [[ -f $1 ]] || bye "'$1' is not a regular file"
     [[ -r $1 ]] || bye "'$1' is not readable"
@@ -718,7 +718,7 @@ Install or upgrade
 
 Step by step install
     ${self} download [--lang <lang>] [--base <dir>] <package>
-    ${self} install-file [--base <dir>] <file>
+    ${self} extract [--base <dir>] <file>
     ${self} select [--base <dir>] [--fzf|--no-fzf] <package>
 
 Uninstall
@@ -726,9 +726,9 @@ Uninstall
     ${self} prune [--base <dir>] [-n <num>] <package>
 
 Utils
-    ${self} list-installed [package]
-    ${self} list-langs <package>
-    ${self} desktop-file [--base <dir>] [--no-path] <package>
+    ${self} list [package]
+    ${self} langs <package>
+    ${self} desktop [--base <dir>] [--no-path] <package>
 
 Package is one of: firefox, firefox-beta, firefox-esr, thunderbird,
 thunderbird-beta.
@@ -746,10 +746,9 @@ OPTIONS SUMMARY
     Generic 'number' option.
 
 --no-path
-    Only applicable to the 'desktop-file' command. By default the
-    'Exec' property contains a full path to the binary. With this
-    option it would be just a package name like 'firefox' or
-    'firefox-esr'.
+    Only applicable to the 'desktop' command. By default the 'Exec'
+    property contains a full path to the binary. With this option it
+    would be just a package name like 'firefox' or 'firefox-esr'.
 
 --fzf --no-fzf
     Override the default behavior of the interactive picker.
@@ -786,8 +785,8 @@ download
     Download the latest version of a package into the current dir if
     only an update is available and verify the signature.
 
-install-file
-    Install a previously downloaded archive into the base dir.
+extract
+    Extract a previously downloaded archive into the base dir.
 
 select
     Interactively select the version for a package's symlink in the base
@@ -802,13 +801,13 @@ prune
     only 2 most recent versions are kept including the selected
     one. '-n' option can be used to change the default.
 
-list-installed
+list
     List installed versions for a package or all packages.
 
-list-langs
+langs
     List available languages for the latest version of a package.
 
-desktop-file
+desktop
     Generate a desktop file for the package.
 
 
@@ -880,18 +879,18 @@ main () {
     local -A ctrl=(
         [install]=install_latest
         [download]=download_latest
-        [install-file]=self
+        [extract]=self
         [select]=select_version
         [delete]=delete_version
         [prune]=prune_versions
-        [list-installed]=self
-        [list-langs]=list_langs
-        [desktop-file]=desktop_file
+        [list]=self
+        [langs]=list_langs
+        [desktop]=desktop_file
     )
 
     [[ -v ctrl[$mode] ]] || bye "unknown command '$mode'"
 
-    if [[ $mode != list-langs ]]; then
+    if [[ $mode != langs ]]; then
         _dir "$base"
 
         # Ensure $base is an absolute path.
@@ -902,14 +901,14 @@ main () {
     fi
 
     case $mode in
-        install-file)
+        extract)
             (($#)) || bye 'file name is required'
 
             install_file "$1"
             return
             ;;
 
-        list-installed)
+        list)
             local args
             (($#)) && args=("$1") || args=(firefox{,-esr,-beta} thunderbird{,-beta})
             list_installed "${args[@]}"
