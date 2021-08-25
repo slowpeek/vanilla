@@ -708,6 +708,14 @@ check_fzf () {
     here_warn 'You can force enable it with --fzf or hide this warning with --no-fzf'
 }
 
+import_conf () {
+    local conf
+    for conf in {/etc,~/.config}/vanillarc; do
+        ! [[ -f $conf && -r $conf ]] ||
+            source "$conf" || bye "error while sourcing '$conf'"
+    done
+}
+
 usage () {
     local self=${BASH_SOURCE[0]##*/}
 
@@ -770,6 +778,13 @@ options override the corresponding vars if both are set.
     VANILLA_FZF
         'y' for --fzf, 'n' for --no-fzf. Other values are ignored.
 
+
+CONFIG FILES
+
+Alternative to env vars, you can set the vars in '/etc/vanillarc' or
+'~/.config/vanillarc'. Settings in the latter override the former.
+
+
 COMMANDS
 
 install
@@ -822,6 +837,8 @@ main () {
                   .no-path .fzf .no-fzf -- "$@") || bye 'options error'
     eval set -- "$opts"
     unset -v opts
+
+    import_conf
 
     local lang=${VANILLA_LANG-en-US} base=${VANILLA_BASE-/opt/mozilla}
     local search=n fzf num

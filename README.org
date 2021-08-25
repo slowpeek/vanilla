@@ -110,6 +110,11 @@ options override the corresponding vars if both are set.
 - VANILLA_FZF :: =y= for =--fzf=, =n= for =--no-fzf=. Other values are
   ignored.
 
+** Config files
+
+Alternative to env vars, you can set the vars in =/etc/vanillarc= or
+=~/.config/vanillarc=. Settings in the latter override the former.
+
 ** Commands
 
 If run without any args, the script just prints the usage text.
