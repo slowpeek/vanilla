@@ -424,6 +424,39 @@ delete_version () {
     [[ $sel_best == n ]] || select_version best
 }
 
+prune_versions () {
+    here_prefix prune
+
+    local installed
+    installed_versions installed
+
+    [[ -v installed ]] || bye 'the package is not installed'
+
+    local n=${num-2}
+    ((n > 0)) || bye '-n value cant be zero'
+
+    (((n = ${#installed[@]} - n) > 0)) || {
+        here 'no changes'
+        exit
+    }
+
+    local list=() item
+    for item in "${installed[@]:(-n)}"; do
+        if [[ $item == *\* ]]; then
+            item=${installed[-n-1]}
+        fi
+
+        list+=("$item")
+    done
+
+    for item in "${list[@]}"; do
+        rm -r "$base/$pkg-$item" || bye "cant delete '$_'"
+        here_success "$pkg-$item has been removed"
+    done
+
+    here_unprefix
+}
+
 list_langs () {
     here_prefix langs
     here "pkg=$name"
@@ -683,6 +716,7 @@ Step by step install
 
 Uninstall
     ${self} delete [--base <dir>] [--fzf|--no-fzf] <package>
+    ${self} prune [--base <dir>] [-n <num>] <package>
 
 Utils
     ${self} list-installed [package]
@@ -700,6 +734,9 @@ OPTIONS SUMMARY
 
 -l --lang <lang>
     Package language to download. By default 'en-US'.
+
+-n <num>
+    Generic 'number' option.
 
 --no-path
     Only applicable to the 'desktop-file' command. By default the
@@ -745,6 +782,11 @@ select
 delete
     Interactively select and delete a version of a package from the
     base dir and adjust the package's symlink if needed.
+
+prune
+    Delete old versions of a package from the base dir. By default
+    only 2 most recent versions are kept including the selected
+    one. '-n' option can be used to change the default.
 
 list-installed
     List installed versions for a package or all packages.
@@ -825,6 +867,7 @@ main () {
         [install-file]=self
         [select]=select_version
         [delete]=delete_version
+        [prune]=prune_versions
         [list-installed]=self
         [list-langs]=list_langs
         [desktop-file]=desktop_file

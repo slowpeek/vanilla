@@ -36,6 +36,7 @@ Uninstall
 
 #+begin_example
   vanilla delete [--base <dir>] [--fzf|--no-fzf] <package>
+  vanilla prune [--base <dir>] [-n <num>] <package>
 #+end_example
 
 Utils
@@ -140,6 +141,10 @@ If run without any args, the script just prints the usage text.
   from the base dir and adjust the package's symlink if needed.
 
   Example: =vanilla delete firefox=
+
+- prune :: Delete old versions of a package from the base dir. By
+  default only 2 most recent versions are kept including the selected
+  one. =-n= option can be used to change the default.
 
 - list-installed :: List installed versions for a package or all
   packages.
