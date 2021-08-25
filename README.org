@@ -13,6 +13,14 @@ requires at least =bash 4.3=
 
 The only required step is creating the [[#base-dir][base dir]].
 
+Some commands rely on external tools which are not always available by
+default. Here is the complete list with package names for Ubuntu:
+
+- curl (from =curl=)
+- gpg (from =gnupg=)
+- column (from =bsdmainutils=)
+- bzip2 (from =bzip2=) or lbzip2 (from =lbzip2=)
+
 With =lbzip2= installed you can significantly speed up decompression
 of downloaded packages.
 
