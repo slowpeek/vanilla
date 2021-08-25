@@ -337,12 +337,20 @@ pick_version () {
         read -r reply || true
         echo
     else
+        local header="
+Quit: Esc / Ctl-D
+--------------------------
+
+$2:
+
+"
+
         local fzf_args=(
             --phony
             --with-nth=2..
-            --header="$2:"$'\n\n'
+            --header="${header:1}"
             --prompt=''
-            --height="$((${#list[@]} + 6))"
+            --height="$((${#list[@]} + 9))"
             --reverse
             --no-info
             --bind=change:clear-query
