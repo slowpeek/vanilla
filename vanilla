@@ -171,7 +171,7 @@ r_dir () { [[ -r $1 && -x $1 ]] || bye "'$1' is not readable"; }
 
 set_pkg () {
     local name names
-    for name in firefox{,-esr,-beta} thunderbird{,-beta}; do
+    for name in "${packages[@]}"; do
         if [[ $1 == "$name" ]]; then
             pkg=${1%-*}
             [[ $pkg == "$1" ]] && type=release || type=${1#*-}
@@ -832,6 +832,7 @@ main () {
 
     import_conf
 
+    local packages=(firefox{,-esr,-beta} thunderbird{,-beta})
     local lang=${VANILLA_LANG-en-US} base=${VANILLA_BASE-/opt/mozilla}
     local search=n fzf num
 
@@ -912,7 +913,7 @@ main () {
 
         list)
             local args
-            (($#)) && args=("$1") || args=(firefox{,-esr,-beta} thunderbird{,-beta})
+            (($#)) && args=("$1") || args=("${packages[@]}")
             cmd_list "${args[@]}"
             return
             ;;
