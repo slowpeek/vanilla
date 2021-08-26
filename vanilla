@@ -81,10 +81,9 @@ jetopt () {
     getopt -o "$mode$short" -l "${long:1}" "$@"
 }
 
-# --------------------------------------------------------------
+# here-bye enhancements ----------------------------------------
 
-# Rename bye => org_bye
-eval org_"$(declare -f bye)"
+eval org_"$(declare -f bye)"    # Rename bye => org_bye
 
 here_prefix () {
     HERE_PREFIX+=("$1")
@@ -137,6 +136,8 @@ bye () {
     org_bye "$@"
 }
 
+# misc ---------------------------------------------------------
+
 curl () {
     command curl --connect-timeout 3 --compressed -f "$@"
 }
@@ -165,6 +166,8 @@ version_le () {
 _dir () { [[ -d $1 ]] || bye "'$1' is not a dir"; }
 w_dir () { [[ -w $1 && -x $1 ]] || bye "'$1' is not writable"; }
 r_dir () { [[ -r $1 && -x $1 ]] || bye "'$1' is not readable"; }
+
+# vanilla helpers ----------------------------------------------
 
 set_pkg () {
     local name names
@@ -217,27 +220,6 @@ installed_versions () {
     [[ ! -v list ]] || list=("${list[@]#*-}")
 }
 
-list_installed () {
-    here_prefix list
-
-    local name pkg type list sel empty=y
-    for name; do
-        set_pkg "$name"
-
-        installed_versions list
-        [[ -v list ]] || continue
-
-        empty=n
-
-        echo "$name"
-        printf '    %s\n' "${list[@]}"
-        echo
-    done
-
-    [[ $empty == n ]] || here_warn 'nothing to list' >&2
-    here_unprefix
-}
-
 latest_version () {
     need_bin curl
 
@@ -257,7 +239,7 @@ latest_version () {
     [[ -n $ver ]] || bye "cant get latest $name version"
 }
 
-check_gpg_key () {
+ensure_gpg_key () {
     here_prefix gpg
     need_bin gpg
 
@@ -267,65 +249,6 @@ check_gpg_key () {
         # keyserver.ubuntu.com still works with trusty
         gpg --recv-keys --keyserver keyserver.ubuntu.com "$key" || bye 'key fetch fail'
         here_success 'key fetch OK'
-    fi
-
-    here_unprefix
-}
-
-download_latest () {
-    here_prefix download
-    here "pkg=$name lang=$lang"
-
-    local installed best=none
-    installed_versions installed
-    [[ ! -v installed ]] || best=${installed[0]%\*}
-
-    here "installed version: $best"
-
-    local latest
-    latest_version latest
-    here "latest version: $latest"
-
-    if [[ -v installed ]] && version_le "$latest" "$best"; then
-        here 'no updates available'
-        exit
-    fi
-
-    __on_error () {
-        rm -f "$fn"             # Remove partially downloaded file.
-
-        if [[ $1 == sigint ]]; then
-            echo >&2
-            bye 'interrupted'
-        fi
-
-        bye 'curl error'
-    }
-
-    local fn n=0
-    for fn in "$pkg-$latest.tar.bz2"{.asc,}; do
-        [[ ! -e $fn ]] || continue
-
-        ((n++)) || [[ -w . ]] || bye "'$PWD' is not writable"
-
-        trap '__on_error sigint' SIGINT
-        curl -O "$base_url/$latest/linux-$HOSTTYPE/$lang/$fn" || __on_error error
-        trap SIGINT
-    done
-
-    unset -f __on_error
-
-    ((n)) && here_success "$n files fetched" || here 'skip fetch'
-
-    check_gpg_key
-
-    gpg --verify "$fn".asc || bye 'gpg verify fail'
-    here_success 'good gpg signature'
-
-    if (($#)); then
-        [[ $1 == file ]] || local -n file=$1
-        # shellcheck disable=SC2034
-        file=$fn
     fi
 
     here_unprefix
@@ -395,305 +318,6 @@ $2:
         # shellcheck disable=SC2034
         result=${list[reply-1]}
     fi
-}
-
-select_version () {
-    here_prefix select
-
-    local choice q=best
-    [[ ${1-} == best ]] || q="Which version of $name the symlink should point to"
-
-    pick_version choice "$q" || exit
-
-    if [[ -z $choice || $choice == *\* ]]; then
-        [[ ${1-} == best ]] || here 'no changes'
-        exit
-    fi
-
-    local link=$base/$name link_action=set
-
-    if [[ -h $link ]]; then
-        [[ ! $(readlink "$link") == "$pkg"-[0-9]* ]] || link_action=update
-    else
-      [[ ! -e $link ]] || bye "'$link' is not a symlink"
-    fi
-
-    w_dir "$base"
-    ln -sfT "$pkg-$choice" "$link" || bye "cant $link_action '$link'"
-
-    here_success "$link_action link: $name => $pkg-$choice"
-    here_unprefix
-}
-
-delete_version () {
-    here_prefix delete
-
-    local choice
-    pick_version choice "Which version of $name to delete" || exit
-
-    if [[ -z $choice ]]; then
-        here 'no changes'
-        exit
-    fi
-
-    w_dir "$base"
-
-    local sel_best=n
-    if [[ $choice == *\* ]]; then
-        choice=${choice::-1}
-
-        sel_best=y
-        # Always remove the symlink along with the selected version so
-        # that if it was the only version installed there is no
-        # dangling symlink left.
-        rm "$base/$name" || bye "cant delete '$_'"
-    fi
-
-    rm -r "$base/$pkg-$choice" || bye "cant delete '$_'"
-
-    here_success "$pkg-$choice has been removed"
-    here_unprefix
-
-    [[ $sel_best == n ]] || select_version best
-}
-
-prune_versions () {
-    here_prefix prune
-
-    local installed
-    installed_versions installed
-
-    [[ -v installed ]] || bye 'the package is not installed'
-
-    local n=${num-2}
-    ((n > 0)) || bye '-n value cant be zero'
-
-    (((n = ${#installed[@]} - n) > 0)) || {
-        here 'no changes'
-        exit
-    }
-
-    local list=() item
-    for item in "${installed[@]:(-n)}"; do
-        if [[ $item == *\* ]]; then
-            item=${installed[-n-1]}
-        fi
-
-        list+=("$item")
-    done
-
-    for item in "${list[@]}"; do
-        rm -r "$base/$pkg-$item" || bye "cant delete '$_'"
-        here_success "$pkg-$item has been removed"
-    done
-
-    here_unprefix
-}
-
-list_langs () {
-    here_prefix langs
-    here "pkg=$name"
-
-    local latest
-    latest_version latest
-    here "latest version: $latest"
-
-    local langs
-    # 'cat' is used below to ensure pipe status=0
-    readarray -t langs < <(curl -sS "$base_url/$latest/linux-$HOSTTYPE/" 2>/dev/null |
-                               grep -oP '(?<=>)[^/]+(?=/</a>)' | cat)
-
-    [[ -v langs ]] || bye "cant list langs for $name"
-
-    need_bin column
-
-    echo -e "\n${#langs[@]} available languages:\n"
-    printf '%s\n' "${langs[@]}" | pr -t8 -s' ' | column -t
-
-    here_unprefix
-}
-
-desktop_file () {
-    local app_name=${pkg^}
-
-    case $type in
-        beta)
-            app_name+=' Beta'
-            ;;
-        esr)
-            app_name+=' ESR'
-            ;;
-    esac
-
-    local exec=${name}
-    [[ $search == y ]] || exec=$base/$name/$pkg
-
-    local icon=${base}/${name}/chrome/icons/default/default128.png
-
-    if [[ $pkg == firefox* ]]; then
-        cat <<EOF
-[Desktop Entry]
-Version=1.0
-Name=${app_name}
-Exec=${exec} %u
-Categories=Network;WebBrowser;
-Type=Application
-MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/chrome;video/webm;application/x-xpinstall;
-Icon=${icon}
-Terminal=false
-StartupNotify=true
-Actions=new-window;new-private-window;
-
-[Desktop Action new-window]
-Name=Open a new window
-Exec=${exec} -new-window
-
-[Desktop Action new-private-window]
-Name=Open a new private window
-Exec=${exec} -private-window
-
-EOF
-    else
-        cat <<EOF
-[Desktop Entry]
-Version=1.0
-Name=${app_name}
-Exec=${exec} %u
-Categories=Network;Email;
-Type=Application
-MimeType=x-scheme-handler/mailto;application/x-xpinstall;
-Icon=${icon}
-Terminal=false
-StartupNotify=true
-Actions=compose;contacts
-
-[Desktop Action compose]
-Name=Compose new message
-Exec=${exec} -compose
-
-[Desktop Action contacts]
-Name=Contacts
-Exec=${exec} -addressbook
-
-EOF
-    fi
-}
-
-install_file () {
-    here_prefix extract
-
-    [[ -f $1 ]] || bye "'$1' is not a regular file"
-    [[ -r $1 ]] || bye "'$1' is not readable"
-    [[ $1 == *.tar.bz2 ]] || bye "'$1' is not a .tar.bz2 archive"
-
-    local fn=${1##*\/}
-
-    [[ $fn == @(firefox|thunderbird)-[1-9]* ]] ||
-        bye "'$1' doesnt look like a mozilla package"
-
-    w_dir "$base"
-
-    local dir=$base/${1%.tar.bz2}
-    if [[ -e $dir ]]; then
-        _dir "$dir"
-        w_dir "$dir"
-    else
-        mkdir "$dir"
-    fi
-
-    here "extract to '$dir'"
-
-    need_bin bzip2 lbzip2
-
-    local args=(-C "$dir" --strip-components=1 --checkpoint=.400)
-    ! is_bin lbzip2 || args+=(-I lbzip2)
-    tar xf "$1" "${args[@]}" || bye 'extract fail'
-
-    echo
-    here_success 'extract OK'
-    here_unprefix
-}
-
-install_latest () {
-    # Readonly flag is used here to protect $dir from unintentional
-    # changes until the dir is deleted.
-    local -r dir=${TMPDIR:-/tmp}/vanilla:$name
-
-    [[ -e $dir ]] && _dir "$dir" || mkdir "$dir"
-    pushd "$dir" >/dev/null
-
-    local file
-    download_latest file
-
-    install_file "$file"
-
-    (select_version best) || exit
-
-    popd >/dev/null
-    rm -r "$dir"
-}
-
-check_reqs () {
-    # arch
-    [[ $HOSTTYPE == @(x86_64|i686) ]] ||
-        bye 'Mozilla only provides packages for x86_64 and i686.' \
-            "Your arch is $HOSTTYPE"
-
-    # glibc
-    local req=2.17 line
-
-    read -r line < <(ldd --version)
-    line=${line##*[[:space:]]}
-
-    if [[ $line == 2.* ]]; then
-        version_le "$req" "$line" ||
-            here_warn "glibc $line is not supported." \
-                      "Mozilla builds require glibc $req at least."
-    else
-        here_warn 'cant figure out glibc version'
-    fi
-}
-
-check_empty () {
-    while (($#)); do
-        [[ -n ${!1} ]] || bye "${2:---$1} value cant be empty"
-        shift 2
-    done
-}
-
-check_num () {
-    [[ -v num ]] || return 0    # OK if not set
-
-    check_empty num -n
-
-    [[ $num == +([[:digit:]]) ]] || bye '-n value must be a non-negative number'
-
-    num=${num#${num%%[^0]*}}    # ltrim '0' to prevent octal syntax
-    [[ -n $num ]] || num=0
-}
-
-check_fzf () {
-    local custom=${fzf+y}
-    fzf=${fzf-y}
-
-    [[ $fzf == y ]] && is_bin fzf || {
-            fzf=n
-            return
-        }
-
-    local req=0.20 ver
-
-    # '0.20.0' in focal
-    # '0.24 (dev)' in implish
-    # '0.27.2 (8255aa2)' in arch
-    read -r ver _ < <(fzf --version)
-
-    [[ -z $custom ]] && ! version_le "$req" "$ver" || return 0
-
-    fzf=n
-
-    here_warn "You fzf is older than $req, the fzf picker is disabled by default."
-    here_warn 'You can force enable it with --fzf or hide this warning with --no-fzf'
 }
 
 import_conf () {
@@ -812,6 +436,389 @@ EOF
     exit
 }
 
+# commands -----------------------------------------------------
+
+cmd_download () {
+    here_prefix download
+    here "pkg=$name lang=$lang"
+
+    local installed best=none
+    installed_versions installed
+    [[ ! -v installed ]] || best=${installed[0]%\*}
+
+    here "installed version: $best"
+
+    local latest
+    latest_version latest
+    here "latest version: $latest"
+
+    if [[ -v installed ]] && version_le "$latest" "$best"; then
+        here 'no updates available'
+        exit
+    fi
+
+    __on_error () {
+        rm -f "$fn"             # Remove partially downloaded file.
+
+        if [[ $1 == sigint ]]; then
+            echo >&2
+            bye 'interrupted'
+        fi
+
+        bye 'curl error'
+    }
+
+    local fn n=0
+    for fn in "$pkg-$latest.tar.bz2"{.asc,}; do
+        [[ ! -e $fn ]] || continue
+
+        ((n++)) || [[ -w . ]] || bye "'$PWD' is not writable"
+
+        trap '__on_error sigint' SIGINT
+        curl -O "$base_url/$latest/linux-$HOSTTYPE/$lang/$fn" || __on_error error
+        trap SIGINT
+    done
+
+    unset -f __on_error
+
+    ((n)) && here_success "$n files fetched" || here 'skip fetch'
+
+    ensure_gpg_key
+
+    gpg --verify "$fn".asc || bye 'gpg verify fail'
+    here_success 'good gpg signature'
+
+    if (($#)); then
+        [[ $1 == file ]] || local -n file=$1
+        # shellcheck disable=SC2034
+        file=$fn
+    fi
+
+    here_unprefix
+}
+
+cmd_extract () {
+    here_prefix extract
+
+    [[ -f $1 ]] || bye "'$1' is not a regular file"
+    [[ -r $1 ]] || bye "'$1' is not readable"
+    [[ $1 == *.tar.bz2 ]] || bye "'$1' is not a .tar.bz2 archive"
+
+    local fn=${1##*\/}
+
+    [[ $fn == @(firefox|thunderbird)-[1-9]* ]] ||
+        bye "'$1' doesnt look like a mozilla package"
+
+    w_dir "$base"
+
+    local dir=$base/${1%.tar.bz2}
+    if [[ -e $dir ]]; then
+        _dir "$dir"
+        w_dir "$dir"
+    else
+        mkdir "$dir"
+    fi
+
+    here "extract to '$dir'"
+
+    need_bin bzip2 lbzip2
+
+    local args=(-C "$dir" --strip-components=1 --checkpoint=.400)
+    ! is_bin lbzip2 || args+=(-I lbzip2)
+    tar xf "$1" "${args[@]}" || bye 'extract fail'
+
+    echo
+    here_success 'extract OK'
+    here_unprefix
+}
+
+cmd_select () {
+    here_prefix select
+
+    local choice q=best
+    [[ ${1-} == best ]] || q="Which version of $name the symlink should point to"
+
+    pick_version choice "$q" || exit
+
+    if [[ -z $choice || $choice == *\* ]]; then
+        [[ ${1-} == best ]] || here 'no changes'
+        exit
+    fi
+
+    local link=$base/$name link_action=set
+
+    if [[ -h $link ]]; then
+        [[ ! $(readlink "$link") == "$pkg"-[0-9]* ]] || link_action=update
+    else
+      [[ ! -e $link ]] || bye "'$link' is not a symlink"
+    fi
+
+    w_dir "$base"
+    ln -sfT "$pkg-$choice" "$link" || bye "cant $link_action '$link'"
+
+    here_success "$link_action link: $name => $pkg-$choice"
+    here_unprefix
+}
+
+cmd_install () {
+    # Readonly flag is used here to protect $dir from unintentional
+    # changes until the dir is deleted.
+    local -r dir=${TMPDIR:-/tmp}/vanilla:$name
+
+    [[ -e $dir ]] && _dir "$dir" || mkdir "$dir"
+    pushd "$dir" >/dev/null
+
+    local file
+    cmd_download file
+
+    cmd_extract "$file"
+
+    (cmd_select best) || exit
+
+    popd >/dev/null
+    rm -r "$dir"
+}
+
+cmd_delete () {
+    here_prefix delete
+
+    local choice
+    pick_version choice "Which version of $name to delete" || exit
+
+    if [[ -z $choice ]]; then
+        here 'no changes'
+        exit
+    fi
+
+    w_dir "$base"
+
+    local sel_best=n
+    if [[ $choice == *\* ]]; then
+        choice=${choice::-1}
+
+        sel_best=y
+        # Always remove the symlink along with the selected version so
+        # that if it was the only version installed there is no
+        # dangling symlink left.
+        rm "$base/$name" || bye "cant delete '$_'"
+    fi
+
+    rm -r "$base/$pkg-$choice" || bye "cant delete '$_'"
+
+    here_success "$pkg-$choice has been removed"
+    here_unprefix
+
+    [[ $sel_best == n ]] || select_version best
+}
+
+cmd_prune () {
+    here_prefix prune
+
+    local installed
+    installed_versions installed
+
+    [[ -v installed ]] || bye 'the package is not installed'
+
+    local n=${num-2}
+    ((n > 0)) || bye '-n value cant be zero'
+
+    (((n = ${#installed[@]} - n) > 0)) || {
+        here 'no changes'
+        exit
+    }
+
+    local list=() item
+    for item in "${installed[@]:(-n)}"; do
+        if [[ $item == *\* ]]; then
+            item=${installed[-n-1]}
+        fi
+
+        list+=("$item")
+    done
+
+    for item in "${list[@]}"; do
+        rm -r "$base/$pkg-$item" || bye "cant delete '$_'"
+        here_success "$pkg-$item has been removed"
+    done
+
+    here_unprefix
+}
+
+cmd_list () {
+    here_prefix list
+
+    local name pkg type list sel empty=y
+    for name; do
+        set_pkg "$name"
+
+        installed_versions list
+        [[ -v list ]] || continue
+
+        empty=n
+
+        echo "$name"
+        printf '    %s\n' "${list[@]}"
+        echo
+    done
+
+    [[ $empty == n ]] || here_warn 'nothing to list' >&2
+    here_unprefix
+}
+
+cmd_langs () {
+    here_prefix langs
+    here "pkg=$name"
+
+    local latest
+    latest_version latest
+    here "latest version: $latest"
+
+    local langs
+    # 'cat' is used below to ensure pipe status=0
+    readarray -t langs < <(curl -sS "$base_url/$latest/linux-$HOSTTYPE/" 2>/dev/null |
+                               grep -oP '(?<=>)[^/]+(?=/</a>)' | cat)
+
+    [[ -v langs ]] || bye "cant list langs for $name"
+
+    need_bin column
+
+    echo -e "\n${#langs[@]} available languages:\n"
+    printf '%s\n' "${langs[@]}" | pr -t8 -s' ' | column -t
+
+    here_unprefix
+}
+
+cmd_desktop () {
+    local app_name=${pkg^}
+
+    case $type in
+        beta)
+            app_name+=' Beta'
+            ;;
+        esr)
+            app_name+=' ESR'
+            ;;
+    esac
+
+    local exec=${name}
+    [[ $search == y ]] || exec=$base/$name/$pkg
+
+    local icon=${base}/${name}/chrome/icons/default/default128.png
+
+    if [[ $pkg == firefox* ]]; then
+        cat <<EOF
+[Desktop Entry]
+Version=1.0
+Name=${app_name}
+Exec=${exec} %u
+Categories=Network;WebBrowser;
+Type=Application
+MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/chrome;video/webm;application/x-xpinstall;
+Icon=${icon}
+Terminal=false
+StartupNotify=true
+Actions=new-window;new-private-window;
+
+[Desktop Action new-window]
+Name=Open a new window
+Exec=${exec} -new-window
+
+[Desktop Action new-private-window]
+Name=Open a new private window
+Exec=${exec} -private-window
+
+EOF
+    else
+        cat <<EOF
+[Desktop Entry]
+Version=1.0
+Name=${app_name}
+Exec=${exec} %u
+Categories=Network;Email;
+Type=Application
+MimeType=x-scheme-handler/mailto;application/x-xpinstall;
+Icon=${icon}
+Terminal=false
+StartupNotify=true
+Actions=compose;contacts
+
+[Desktop Action compose]
+Name=Compose new message
+Exec=${exec} -compose
+
+[Desktop Action contacts]
+Name=Contacts
+Exec=${exec} -addressbook
+
+EOF
+    fi
+}
+
+# checks -------------------------------------------------------
+
+check_reqs () {
+    # arch
+    [[ $HOSTTYPE == @(x86_64|i686) ]] ||
+        bye 'Mozilla only provides packages for x86_64 and i686.' \
+            "Your arch is $HOSTTYPE"
+
+    # glibc
+    local req=2.17 line
+
+    read -r line < <(ldd --version)
+    line=${line##*[[:space:]]}
+
+    if [[ $line == 2.* ]]; then
+        version_le "$req" "$line" ||
+            here_warn "glibc $line is not supported." \
+                      "Mozilla builds require glibc $req at least."
+    else
+        here_warn 'cant figure out glibc version'
+    fi
+}
+
+check_empty () {
+    while (($#)); do
+        [[ -n ${!1} ]] || bye "${2:---$1} value cant be empty"
+        shift 2
+    done
+}
+
+check_num () {
+    [[ -v num ]] || return 0    # OK if not set
+
+    check_empty num -n
+
+    [[ $num == +([[:digit:]]) ]] || bye '-n value must be a non-negative number'
+
+    num=${num#${num%%[^0]*}}    # ltrim '0' to prevent octal syntax
+    [[ -n $num ]] || num=0
+}
+
+check_fzf () {
+    local custom=${fzf+y}
+    fzf=${fzf-y}
+
+    [[ $fzf == y ]] && is_bin fzf || {
+            fzf=n
+            return
+        }
+
+    local req=0.20 ver
+
+    # '0.20.0' in focal
+    # '0.24 (dev)' in implish
+    # '0.27.2 (8255aa2)' in arch
+    read -r ver _ < <(fzf --version)
+
+    [[ -z $custom ]] && ! version_le "$req" "$ver" || return 0
+
+    fzf=n
+
+    here_warn "You fzf is older than $req, the fzf picker is disabled by default."
+    here_warn 'You can force enable it with --fzf or hide this warning with --no-fzf'
+}
+
 main () {
     check_reqs
 
@@ -872,15 +879,15 @@ main () {
     shift
 
     local -A ctrl=(
-        [install]=install_latest
-        [download]=download_latest
+        [install]=cmd_install
+        [download]=cmd_download
         [extract]=self
-        [select]=select_version
-        [delete]=delete_version
-        [prune]=prune_versions
+        [select]=cmd_select
+        [delete]=cmd_delete
+        [prune]=cmd_prune
         [list]=self
-        [langs]=list_langs
-        [desktop]=desktop_file
+        [langs]=cmd_langs
+        [desktop]=cmd_desktop
     )
 
     [[ -v ctrl[$mode] ]] || bye "unknown command '$mode'"
@@ -899,14 +906,14 @@ main () {
         extract)
             (($#)) || bye 'file name is required'
 
-            install_file "$1"
+            cmd_extract "$1"
             return
             ;;
 
         list)
             local args
             (($#)) && args=("$1") || args=(firefox{,-esr,-beta} thunderbird{,-beta})
-            list_installed "${args[@]}"
+            cmd_list "${args[@]}"
             return
             ;;
     esac
