@@ -615,12 +615,9 @@ install_file () {
 }
 
 install_latest () {
-    local token=${BASH_SOURCE[0]##*/}
-    token=${token%%.*}
-
     # Readonly flag is used here to protect $dir from unintentional
     # changes until the dir is deleted.
-    local -r dir=${TMPDIR:-/tmp}/$token:$name
+    local -r dir=${TMPDIR:-/tmp}/vanilla:$name
 
     [[ -e $dir ]] && _dir "$dir" || mkdir "$dir"
     pushd "$dir" >/dev/null
@@ -708,27 +705,25 @@ import_conf () {
 }
 
 usage () {
-    local self=${BASH_SOURCE[0]##*/}
-
     cat <<EOF
 USAGE
 
 Install or upgrade
-    ${self} install [--lang <lang>] [--base <dir>] <package>
+    vanilla install [--lang <lang>] [--base <dir>] <package>
 
 Step by step install
-    ${self} download [--lang <lang>] [--base <dir>] <package>
-    ${self} extract [--base <dir>] <file>
-    ${self} select [--base <dir>] [--fzf|--no-fzf] <package>
+    vanilla download [--lang <lang>] [--base <dir>] <package>
+    vanilla extract [--base <dir>] <file>
+    vanilla select [--base <dir>] [--fzf|--no-fzf] <package>
 
 Uninstall
-    ${self} delete [--base <dir>] [--fzf|--no-fzf] <package>
-    ${self} prune [--base <dir>] [-n <num>] <package>
+    vanilla delete [--base <dir>] [--fzf|--no-fzf] <package>
+    vanilla prune [--base <dir>] [-n <num>] <package>
 
 Utils
-    ${self} list [package]
-    ${self} langs <package>
-    ${self} desktop [--base <dir>] [--no-path] <package>
+    vanilla list [package]
+    vanilla langs <package>
+    vanilla desktop [--base <dir>] [--no-path] <package>
 
 Package is one of: firefox, firefox-beta, firefox-esr, thunderbird,
 thunderbird-beta.
