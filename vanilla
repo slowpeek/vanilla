@@ -701,22 +701,34 @@ cmd_desktop () {
     esac
 
     local exec=${name}
-    [[ $search == y ]] || exec=$base/$name/$pkg
+    [[ $search == y ]] || exec=$base/$name/$name
 
     local icon=${base}/${name}/chrome/icons/default/default128.png
 
-    if [[ $pkg == firefox* ]]; then
-        cat <<EOF
+    cat <<EOF
 [Desktop Entry]
 Version=1.0
-Name=${app_name}
-Exec=${exec} %u
-Categories=Network;WebBrowser;
 Type=Application
-MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/chrome;video/webm;application/x-xpinstall;
-Icon=${icon}
 Terminal=false
 StartupNotify=true
+Name=${app_name}
+Exec=${exec} %u
+Icon=${icon}
+
+EOF
+
+    if [[ $pkg == firefox* ]]; then
+        local mime=(
+            text/html text/xml application/xhtml+xml application/xml
+            application/rss+xml application/rdf+xml image/gif
+            image/jpeg image/png x-scheme-handler/http
+            x-scheme-handler/https x-scheme-handler/chrome video/webm
+            application/x-xpinstall
+        )
+
+        cat <<EOF
+Categories=Network;WebBrowser;
+MimeType=$(printf '%s;' "${mime[@]}")
 Actions=new-window;new-private-window;
 
 [Desktop Action new-window]
@@ -730,16 +742,8 @@ Exec=${exec} -private-window
 EOF
     else
         cat <<EOF
-[Desktop Entry]
-Version=1.0
-Name=${app_name}
-Exec=${exec} %u
 Categories=Network;Email;
-Type=Application
 MimeType=x-scheme-handler/mailto;application/x-xpinstall;
-Icon=${icon}
-Terminal=false
-StartupNotify=true
 Actions=compose;contacts
 
 [Desktop Action compose]
