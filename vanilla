@@ -697,11 +697,9 @@ cmd_desktop () {
 
     case $type in
         beta)
-            app_name+=' Beta'
-            ;;
+            app_name+=' Beta' ;;
         esr)
-            app_name+=' ESR'
-            ;;
+            app_name+=' ESR' ;;
     esac
 
     local exec=${name}
@@ -849,30 +847,19 @@ main () {
     while true; do
         case $1 in
             --)
-                shift
-                break
-                ;;
+                shift; break ;;
             --no-path)
-                search=y
-                ;;
+                search=y ;;
             --fzf)
-                fzf=y
-                ;;
+                fzf=y ;;
             --no-fzf)
-                fzf=n
-                ;;
+                fzf=n ;;
             -l|--lang)
-                lang=$2
-                shift
-                ;;
+                lang=$2; shift ;;
             -b|--base)
-                base=$2
-                shift
-                ;;
+                base=$2; shift ;;
             -n)
-                num=$2
-                shift
-                ;;
+                num=$2; shift ;;
         esac
 
         shift
