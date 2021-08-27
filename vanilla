@@ -500,6 +500,8 @@ cmd_download () {
 cmd_extract () {
     here_prefix extract
 
+    (($#)) || bye 'file name is required'
+
     [[ -f $1 ]] || bye "'$1' is not a regular file"
     [[ -r $1 ]] || bye "'$1' is not readable"
     [[ $1 == *.tar.bz2 ]] || bye "'$1' is not a .tar.bz2 archive"
@@ -646,6 +648,8 @@ cmd_prune () {
 
 cmd_list () {
     here_prefix list
+
+    (($#)) && set -- "$1" || set -- "${packages[@]}"
 
     local name pkg type list sel empty=y
     for name; do
@@ -880,24 +884,18 @@ main () {
 
     (($#)) || bye 'command name is required'
 
-    local mode=$1
+    local cmd=$1
     shift
 
-    local -A ctrl=(
-        [install]=cmd_install
-        [download]=cmd_download
-        [extract]=self
-        [select]=cmd_select
-        [delete]=cmd_delete
-        [prune]=cmd_prune
-        [list]=self
-        [langs]=cmd_langs
-        [desktop]=cmd_desktop
+    local -A tags=(
+        [install]=t [download]=t [extract]=:self: [select]=t
+        [delete]=t [prune]=t [list]=:self: [langs]=:air: [desktop]=t
     )
 
-    [[ -v ctrl[$mode] ]] || bye "unknown command '$mode'"
+    [[ -v tags[$cmd] ]] || bye "unknown command '$cmd'"
 
-    if [[ $mode != langs ]]; then
+    # Only commands tagged 'air' dont depend on $base.
+    if [[ ! ${tags[$cmd]} == *:air:* ]]; then
         _dir "$base"
 
         # Ensure $base is an absolute path.
@@ -907,22 +905,13 @@ main () {
         fi
     fi
 
-    case $mode in
-        extract)
-            (($#)) || bye 'file name is required'
+    # Commands tagged 'self' parse args themselves.
+    if [[ ${tags[$cmd]} == *:self:* ]]; then
+        "cmd_$cmd" "$@"
+        return
+    fi
 
-            cmd_extract "$1"
-            return
-            ;;
-
-        list)
-            local args
-            (($#)) && args=("$1") || args=("${packages[@]}")
-            cmd_list "${args[@]}"
-            return
-            ;;
-    esac
-
+    # Other commands require a package name.
     (($#)) || bye 'package name is required'
 
     local name=$1 pkg type
@@ -930,7 +919,7 @@ main () {
 
     local base_url=https://download-installer.cdn.mozilla.net/pub/$pkg/releases
 
-    "${ctrl[$mode]}"
+    "cmd_$cmd"
 }
 
 [[ ! ${BASH_SOURCE[0]} == "$0" ]] || main "$@"
