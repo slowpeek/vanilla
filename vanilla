@@ -304,8 +304,7 @@ $2:
             --border
         )
 
-        read -r reply _ < \
-             <(printf '%s\n' "${list[@]}" | cat -n | fzf "${fzf_args[@]}") || true
+        read -r reply _ < <(printf '%s\n' "${list[@]}" | cat -n | fzf "${fzf_args[@]}") || true
     fi
 
     if [[ -n $reply ]]; then
@@ -764,8 +763,7 @@ EOF
 check_reqs () {
     # arch
     [[ $HOSTTYPE == @(x86_64|i686) ]] ||
-        bye 'Mozilla only provides packages for x86_64 and i686.' \
-            "Your arch is $HOSTTYPE"
+        bye "Mozilla only provides packages for x86_64 and i686. Your arch is $HOSTTYPE"
 
     # glibc
     local req=2.17 line
@@ -775,8 +773,7 @@ check_reqs () {
 
     if [[ $line == 2.* ]]; then
         version_le "$req" "$line" ||
-            here_warn "glibc $line is not supported." \
-                      "Mozilla builds require glibc $req at least."
+            here_warn "glibc $line is not supported. Mozilla builds require glibc $req at least."
     else
         here_warn 'cant figure out glibc version'
     fi
@@ -830,8 +827,7 @@ main () {
     (($#)) || usage
 
     local opts
-    opts=$(jetopt llang: bbase: n: \
-                  .no-path .fzf .no-fzf -- "$@") || bye 'options error'
+    opts=$(jetopt llang: bbase: n: .no-path .fzf .no-fzf -- "$@") || bye 'options error'
     eval set -- "$opts"
     unset -v opts
 
