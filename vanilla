@@ -676,9 +676,8 @@ cmd_langs () {
     here "latest version: $latest"
 
     local langs
-    # 'cat' is used below to ensure pipe status=0
     readarray -t langs < <(curl -sS "$base_url/$latest/linux-$HOSTTYPE/" 2>/dev/null |
-                               grep -oP '(?<=>)[^/]+(?=/</a>)' | cat)
+                               grep -oP '(?<=>)[^/]+(?=/</a>)')
 
     [[ -v langs ]] || bye "cant list langs for $name"
 
