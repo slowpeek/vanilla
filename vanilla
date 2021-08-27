@@ -608,7 +608,7 @@ cmd_delete () {
     here_success "$pkg-$choice has been removed"
     here_unprefix
 
-    [[ $sel_best == n ]] || select_version best
+    [[ $sel_best == n ]] || cmd_select best
 }
 
 cmd_prune () {
