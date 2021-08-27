@@ -170,18 +170,17 @@ r_dir () { [[ -r $1 && -x $1 ]] || bye "'$1' is not readable"; }
 # vanilla helpers ----------------------------------------------
 
 set_pkg () {
-    local name names
+    local name
     for name in "${packages[@]}"; do
         if [[ $1 == "$name" ]]; then
             pkg=${1%-*}
             [[ $pkg == "$1" ]] && type=release || type=${1#*-}
+            base_url=https://download-installer.cdn.mozilla.net/pub/$pkg/releases
             return
         fi
-
-        names+=("$name")
     done
 
-    bye "valid package names are: ${names[*]}"
+    bye "valid package names are: ${packages[*]}"
 }
 
 installed_versions () {
@@ -901,10 +900,8 @@ main () {
     # Other commands require a package name.
     (($#)) || bye 'package name is required'
 
-    local name=$1 pkg type
+    local name=$1 pkg type base_url
     set_pkg "$name"
-
-    local base_url=https://download-installer.cdn.mozilla.net/pub/$pkg/releases
 
     "cmd_$cmd"
 }
