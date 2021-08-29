@@ -352,7 +352,7 @@ Uninstall
 Utils
     vanilla list [package]
     vanilla langs <package>
-    vanilla desktop [--base <dir>] [--no-path] <package>
+    vanilla desktop [--base <dir>] [--no-path] [--no-icon-path] <package>
 
 ENV VARS --
 
@@ -637,9 +637,10 @@ cmd_desktop () {
     esac
 
     local exec=${name}
-    [[ $search == y ]] || exec=$base/$name/$name
+    [[ $search == y ]] || exec=$base/$name/$pkg
 
-    local icon=${base}/${name}/chrome/icons/default/default128.png
+    local icon=${name}
+    [[ $icon_search == y ]] || icon=${base}/${name}/chrome/icons/default/default128.png
 
     cat <<EOF
 [Desktop Entry]
@@ -763,7 +764,8 @@ main () {
     (($#)) || usage
 
     local opts
-    opts=$(jetopt llang: bbase: n: .no-path .fzf .no-fzf -- "$@") || bye 'options error'
+    opts=$(jetopt llang: bbase: n: .no-path .no-icon-path \
+                  .fzf .no-fzf -- "$@") || bye 'options error'
     eval set -- "$opts"
     unset -v opts
 
@@ -771,7 +773,7 @@ main () {
 
     local packages=(firefox{,-esr,-beta} thunderbird{,-beta})
     local lang=${VANILLA_LANG-en-US} base=${VANILLA_BASE-/opt/mozilla}
-    local search=n fzf num
+    local search=n icon_search=n fzf num
 
     [[ ! ${VANILLA_FZF-} == [yn] ]] || fzf=$VANILLA_FZF
 
@@ -781,6 +783,8 @@ main () {
                 shift; break ;;
             --no-path)
                 search=y ;;
+            --no-icon-path)
+                icon_search=y ;;
             --fzf)
                 fzf=y ;;
             --no-fzf)

@@ -52,7 +52,7 @@ Utils
 #+begin_example
   vanilla list [package]
   vanilla langs <package>
-  vanilla desktop [--base <dir>] [--no-path] <package>
+  vanilla desktop [--base <dir>] [--no-path] [--no-icon-path] <package>
 #+end_example
 
 ** Packages
@@ -171,8 +171,9 @@ If run without any args, the script just prints the usage text.
   Example: =vanilla langs firefox=
 
 - desktop :: Generate a desktop file for the package. By default the
-  =Exec= property contains a full path to the binary. With =--no-path=
-  it would be just a package name like =firefox= or =firefox-esr=.
+  =Exec= and =Icon= properties contain full pathes. With =--no-path= /
+  =--no-icon-path= it would be just a package name like =firefox= or
+  =firefox-esr=.
 
   Example: =vanilla desktop firefox=
 
