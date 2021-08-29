@@ -333,7 +333,7 @@ import_conf () {
 
 usage () {
     cat <<EOF
-USAGE
+USAGE --
 
 Install or upgrade
     vanilla install [--lang <lang>] [--base <dir>] <package>
@@ -352,86 +352,16 @@ Utils
     vanilla langs <package>
     vanilla desktop [--base <dir>] [--no-path] <package>
 
-Package is one of: firefox, firefox-beta, firefox-esr, thunderbird,
-thunderbird-beta.
-
-
-OPTIONS SUMMARY
-
--b --base <dir>
-    Base dir for installations. By default '/opt/mozilla'.
-
--l --lang <lang>
-    Package language to download. By default 'en-US'.
-
--n <num>
-    Generic 'number' option.
-
---no-path
-    Only applicable to the 'desktop' command. By default the 'Exec'
-    property contains a full path to the binary. With this option it
-    would be just a package name like 'firefox' or 'firefox-esr'.
-
---fzf --no-fzf
-    Override the default behavior of the interactive picker.
-
-
-ENV VARS
-
-Some settings can be set with env vars instead of options. As usually,
-options override the corresponding vars if both are set.
+ENV VARS --
 
     VANILLA_BASE
-        Same as -b/--base
-
     VANILLA_LANG
-        Same as -l/--lang
-
     VANILLA_FZF
-        'y' for --fzf, 'n' for --no-fzf. Other values are ignored.
 
+CONFIG FILES --
 
-CONFIG FILES
-
-Alternative to env vars, you can set the vars in '/etc/vanillarc' or
-'~/.config/vanillarc'. Settings in the latter override the former.
-
-
-COMMANDS
-
-install
-    Install or try to upgrade a package and refresh its symlink in the
-    base dir.
-
-download
-    Download the latest version of a package into the current dir if
-    only an update is available and verify the signature.
-
-extract
-    Extract a previously downloaded archive into the base dir.
-
-select
-    Interactively select the version for a package's symlink in the base
-    dir.
-
-delete
-    Interactively select and delete a version of a package from the
-    base dir and adjust the package's symlink if needed.
-
-prune
-    Delete old versions of a package from the base dir. By default
-    only 2 most recent versions are kept including the selected
-    one. '-n' option can be used to change the default.
-
-list
-    List installed versions for a package or all packages.
-
-langs
-    List available languages for the latest version of a package.
-
-desktop
-    Generate a desktop file for the package.
-
+    /etc/vanillarc
+    ~/.config/vanillarc
 
 More details at https://github.com/slowpeek/vanilla
 
