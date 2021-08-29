@@ -87,19 +87,20 @@ With some packages installed, the base dir layout looks like this:
 
 As you see there are multiple versions of some packages and some of
 those are targeted by non-versioned symlinks. You can interactively
-retarget the symlinks with the =select= command described below.
+retarget the symlinks with the =select= command.
 
 The script doesnt remove anything from the base dir if not asked
-for. You might want to uninstall outdated versions from time to time.
+for. You might want to uninstall outdated versions from time to time
+with the =delete= or =prune= commands.
 
 ** Languages
 
 Mozilla provides packages in many languages. By default the script
 uses =en-US= one. You can set a custom lang with =-l <lang>= / =--lang
-<lang>=. Use =langs= command described below to list available
-languages for a package.
+<lang>=. Use the =langs= command to list available languages for a
+package.
 
-** FZF usage
+** FZF picker
 
 By default the interactive picker uses =fzf= if available and version
 =0.20= at least. You can force it off with =--no-fzf=.
@@ -121,22 +122,20 @@ options override the corresponding vars if both are set.
 ** Config files
 
 Alternative to env vars, you can set the vars in =/etc/vanillarc= or
-=~/.config/vanillarc=. Settings in the latter override the former.
+=~/.config/vanillarc= (applies last).
 
 ** Commands
 
 If run without any args, the script just prints the usage text.
 
 - install :: Install or try to upgrade a package and refresh its
-  symlink in the base dir.
+  symlink in the base dir. Internally this command is a combo of
+  =download=, =extract= and non-interactive =select=.
 
   Example: =vanilla install firefox=
 
 - download :: Download the latest version of a package into the
-  current dir if only an update is available and verify the
-  signature. Even though it seemingly works in the current dir, =-b= /
-  =--base= value still matters since it checks the base dir for the
-  currently installed version.
+  current dir if only an update is available and verify the signature.
 
   Example: =vanilla download firefox=
 
@@ -156,8 +155,11 @@ If run without any args, the script just prints the usage text.
   Example: =vanilla delete firefox=
 
 - prune :: Delete old versions of a package from the base dir. By
-  default only 2 most recent versions are kept including the selected
-  one. =-n= option can be used to change the default.
+  default only 2 most recent versions are kept including the symlinked
+  one. Use =-n= option to override the default. You cant delete the
+  only installed version with =prune=, use =delete= for that.
+
+  Example: =vanilla prune firefox=
 
 - list :: List installed versions for a package or all packages.
 
@@ -182,8 +184,8 @@ If run without any args, the script just prints the usage text.
   Firefox and Thunderbird.
 
 - But there are snaps, flatpaks :: One more option to chose
-  from. Besides one might want to run Firefox under [[https://github.com/netblue30/firejail][firejail]] which is
-  not possible in combination with those sandboxing solutions.
+  from. Besides one might want to run Firefox under [[https://github.com/netblue30/firejail][firejail]] which
+  does not play along with those sandboxing solutions.
 
 - Why not use built-in upgrades :: I dont like the idea of self
   modifying software especially in case of a browser.
