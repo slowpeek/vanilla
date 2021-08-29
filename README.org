@@ -24,6 +24,32 @@ default. Here is the complete list with package names for Ubuntu:
 With =lbzip2= installed you can significantly speed up decompression
 of downloaded packages.
 
+You can use the =desktop= command described [[#commands][below]] to generate sample
+desktop files.
+
+You might also want to symlink the installed binaries under some dir
+from =$PATH= like =~/.local/bin=, =/usr/local/bin= or even
+=/usr/bin=. For example:
+
+#+begin_example
+  /usr/local/bin/firefox-esr => /opt/mozilla/firefox-esr/firefox
+  /usr/local/bin/thunderbird => /opt/mozilla/thunderbird/thunderbird
+#+end_example
+
+With [[https://github.com/netblue30/firejail][Firejail]], put the symlinks into =/usr/bin= and symlink those to
+the firejail binary under =/usr/local/bin= For example:
+
+#+begin_example
+  /usr/bin/firefox-esr => /opt/mozilla/firefox-esr/firefox
+  /usr/bin/thunderbird => /opt/mozilla/thunderbird/thunderbird
+
+  /usr/local/bin/firefox-esr => /usr/bin/firejail
+  /usr/local/bin/thunderbird => /usr/bin/firejail
+#+end_example
+
+Firejail has stock profiles for the binaries with =-beta= and =-esr=
+suffixes, so it works out of the box that way.
+
 * Usage
 
 Install or upgrade
@@ -185,7 +211,7 @@ If run without any args, the script just prints the usage text.
   Firefox and Thunderbird.
 
 - But there are snaps, flatpaks :: One more option to chose
-  from. Besides one might want to run Firefox under [[https://github.com/netblue30/firejail][firejail]] which
+  from. Besides one might want to run Firefox under Firejail which
   does not play along with those sandboxing solutions.
 
 - Why not use built-in upgrades :: I dont like the idea of self
