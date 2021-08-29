@@ -13,7 +13,7 @@ requires at least =bash 4.3=
 
 The only required step is creating the [[#base-dir][base dir]].
 
-Some commands rely on external tools which are not always available by
+Some [[#commands][commands]] rely on external tools which are not always available by
 default. Here is the complete list with package names for Ubuntu:
 
 - curl (from =curl=)
@@ -24,8 +24,7 @@ default. Here is the complete list with package names for Ubuntu:
 With =lbzip2= installed you can significantly speed up decompression
 of downloaded packages.
 
-You can use the =desktop= command described [[#commands][below]] to generate sample
-desktop files.
+You can use the [[#desktop][desktop]] command to generate sample desktop files.
 
 You might also want to symlink the installed binaries under some dir
 from =$PATH= like =~/.local/bin=, =/usr/local/bin= or even
@@ -113,17 +112,17 @@ With some packages installed, the base dir layout looks like this:
 
 As you see there are multiple versions of some packages and some of
 those are targeted by non-versioned symlinks. You can interactively
-retarget the symlinks with the =select= command.
+retarget the symlinks with the [[#select][select]] command.
 
 The script doesnt remove anything from the base dir if not asked
 for. You might want to uninstall outdated versions from time to time
-with the =delete= or =prune= commands.
+with the [[#delete][delete]] or [[#prune][prune]] commands.
 
 ** Languages
 
 Mozilla provides packages in many languages. By default the script
 uses =en-US= one. You can set a custom lang with =-l <lang>= / =--lang
-<lang>=. Use the =langs= command to list available languages for a
+<lang>=. Use the [[#langs][langs]] command to list available languages for a
 package.
 
 ** FZF picker
@@ -154,54 +153,70 @@ Alternative to env vars, you can set the vars in =/etc/vanillarc= or
 
 If run without any args, the script just prints the usage text.
 
-- install :: Install or try to upgrade a package and refresh its
-  symlink in the base dir. Internally this command is a combo of
-  =download=, =extract= and non-interactive =select=.
+*** install
 
-  Example: =vanilla install firefox=
+Install or try to upgrade a package and refresh its symlink in the
+base dir. Internally this command is a combo of =download=, =extract=
+and non-interactive =select=.
 
-- download :: Download the latest version of a package into the
-  current dir if only an update is available and verify the signature.
+Example: =vanilla install firefox=
 
-  Example: =vanilla download firefox=
+*** download
 
-- extract :: Extract a previously downloaded archive into the base
-  dir.
+Download the latest version of a package into the current dir if only
+an update is available and verify the signature.
 
-  Example: =vanilla extract firefox-91.0.tar.bz2=
+Example: =vanilla download firefox=
 
-- select :: Interactively select the version for a package's symlink
-  in the base dir.
+*** extract
 
-  Example: =vanilla select firefox=
+Extract a previously downloaded archive into the base dir.
 
-- delete :: Interactively select and delete a version of a package
-  from the base dir and adjust the package's symlink if needed.
+Example: =vanilla extract firefox-91.0.tar.bz2=
 
-  Example: =vanilla delete firefox=
+*** select
 
-- prune :: Delete old versions of a package from the base dir. By
-  default only 2 most recent versions are kept including the symlinked
-  one. Use =-n= option to override the default. You cant delete the
-  only installed version with =prune=, use =delete= for that.
+Interactively select the version for a package's symlink in the base
+dir.
 
-  Example: =vanilla prune firefox=
+Example: =vanilla select firefox=
 
-- list :: List installed versions for a package or all packages.
+*** delete
 
-  Example: =vanilla list=
+Interactively select and delete a version of a package from the base
+dir and adjust the package's symlink if needed.
 
-- langs :: List available languages for the latest version of a
-  package.
+Example: =vanilla delete firefox=
 
-  Example: =vanilla langs firefox=
+*** prune
 
-- desktop :: Generate a desktop file for the package. By default the
-  =Exec= and =Icon= properties contain full pathes. With =--no-path= /
-  =--no-icon-path= it would be just a package name like =firefox= or
-  =firefox-esr=.
+Delete old versions of a package from the base dir. By default only 2
+most recent versions are kept including the symlinked one. Use =-n=
+option to override the default. You cant delete the only installed
+version with =prune=, use =delete= for that.
 
-  Example: =vanilla desktop firefox=
+Example: =vanilla prune firefox=
+
+*** list
+
+List installed versions for a package or all packages.
+
+Example: =vanilla list=
+
+*** langs
+
+List available languages for the latest version of a package.
+
+Example: =vanilla langs firefox=
+
+*** desktop
+
+Generate a desktop file for the package. By default the =Exec= and
+=Icon= properties contain full pathes. With =--no-path= /
+=--no-icon-path= it would be just a package name like =firefox= or
+=firefox-esr=.
+
+Example: =vanilla desktop firefox=
 
 * FAQ
 
