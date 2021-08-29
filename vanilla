@@ -636,11 +636,11 @@ cmd_desktop () {
             app_name+=' ESR' ;;
     esac
 
-    local exec=${name}
+    local exec=$name
     [[ $search == y ]] || exec=$base/$name/$pkg
 
-    local icon=${name}
-    [[ $icon_search == y ]] || icon=${base}/${name}/chrome/icons/default/default128.png
+    local icon=$name
+    [[ $icon_search == y ]] || icon=$base/$name/chrome/icons/default/default128.png
 
     cat <<EOF
 [Desktop Entry]
