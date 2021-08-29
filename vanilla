@@ -284,11 +284,16 @@ pick_version () {
         read -r reply || true
         echo
     else
-        local header="
-Quit: Esc / Ctl-D
---------------------------
+        local height=$((${#list[@]} + 7)) q=$2
+        if test "$height" -gt 16; then
+            height=$_
+            q+=' (scrollable)'
+        fi
 
-$2:
+        local header="
+Quit: Esc / C-d
+--------------------------
+$q:
 
 "
 
@@ -297,7 +302,7 @@ $2:
             --with-nth=2..
             --header="${header:1}"
             --prompt=''
-            --height="$((${#list[@]} + 9))"
+            --height="$height"
             --reverse
             --no-info
             --bind=change:clear-query
