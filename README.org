@@ -35,8 +35,10 @@ from =$PATH= like =~/.local/bin=, =/usr/local/bin= or even
   /usr/local/bin/thunderbird => /opt/mozilla/thunderbird/thunderbird
 #+end_example
 
-With [[https://github.com/netblue30/firejail][Firejail]], put the symlinks into =/usr/bin= and symlink those to
-the firejail binary under =/usr/local/bin= For example:
+** Firejail notes
+
+Put the symlinks into =/usr/bin= and symlink those to the [[https://github.com/netblue30/firejail][Firejail]]
+binary under =/usr/local/bin=. For example:
 
 #+begin_example
   /usr/bin/firefox-esr => /opt/mozilla/firefox-esr/firefox
@@ -48,6 +50,18 @@ the firejail binary under =/usr/local/bin= For example:
 
 Firejail has stock profiles for the binaries with =-beta= and =-esr=
 suffixes, so it works out of the box that way.
+
+Currently (as of 0.9.66) the thunderbird-beta profile declares
+=private-opt thunderbird-beta=. So by default it would not work with
+installations anywhere under =/opt= but =/opt/thunderbird-beta=. To
+make it work with installations somewhere else under =/opt=, use such
+override:
+
+#+begin_example
+  # /etc/firejail/thunderbird-beta.local
+
+  ignore private-opt
+#+end_example
 
 * Usage
 
