@@ -464,7 +464,8 @@ cmd_extract () {
     ! is_bin lbzip2 || args+=(-I lbzip2)
     tar xf "$1" "${args[@]}" || bye 'extract fail'
 
-    echo
+    printf '\r\e[M'             # Reuse the line taken by tar's
+                                # progress bar.
     here_success 'extract OK'
     here_unprefix
 }
