@@ -347,7 +347,7 @@ Step by step install
 
 Uninstall
     vanilla delete [--base <dir>] [--fzf|--no-fzf] <package>
-    vanilla prune [--base <dir>] [-n <num>] <package>
+    vanilla prune [--base <dir>] [-n <num>] [--dry-run] <package>
 
 Utils
     vanilla list [package]
@@ -574,8 +574,13 @@ cmd_prune () {
         list+=("$item")
     done
 
+    [[ $dry_run == n ]] || here_warn 'dry run mode'
+
     for item in "${list[@]}"; do
-        rm -r "$base/$pkg-$item" || bye "cant delete '$_'"
+        if [[ $dry_run == n ]]; then
+            rm -r "$base/$pkg-$item" || bye "cant delete '$_'"
+        fi
+
         here_success "$pkg-$item has been removed"
     done
 
@@ -766,7 +771,7 @@ main () {
 
     local opts
     opts=$(jetopt llang: bbase: n: .no-path .no-icon-path \
-                  .fzf .no-fzf -- "$@") || bye 'options error'
+                  .dry-run .fzf .no-fzf -- "$@") || bye 'options error'
     eval set -- "$opts"
     unset -v opts
 
@@ -774,7 +779,7 @@ main () {
 
     local packages=(firefox{,-esr,-beta} thunderbird{,-beta})
     local lang=${VANILLA_LANG-en-US} base=${VANILLA_BASE-/opt/mozilla}
-    local search=n icon_search=n fzf num
+    local search=n icon_search=n dry_run=n fzf num
 
     [[ ! ${VANILLA_FZF-} == [yn] ]] || fzf=$VANILLA_FZF
 
@@ -786,6 +791,8 @@ main () {
                 search=y ;;
             --no-icon-path)
                 icon_search=y ;;
+            --dry-run)
+                dry_run=y ;;
             --fzf)
                 fzf=y ;;
             --no-fzf)

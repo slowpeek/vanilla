@@ -83,7 +83,7 @@ Uninstall
 
 #+begin_example
   vanilla delete [--base <dir>] [--fzf|--no-fzf] <package>
-  vanilla prune [--base <dir>] [-n <num>] <package>
+  vanilla prune [--base <dir>] [-n <num>] [--dry-run] <package>
 #+end_example
 
 Utils
@@ -206,8 +206,12 @@ Example: =vanilla delete firefox=
 
 Delete old versions of a package from the base dir. By default only 2
 most recent versions are kept including the symlinked one. Use =-n=
-option to override the default. You cant delete the only installed
-version with =prune=, use =delete= for that.
+option to override the default.
+
+Use =--dry-run= flag to only print what is to be deleted.
+
+You cant delete the only installed version with =prune=, use =delete=
+for that.
 
 Example: =vanilla prune firefox=
 
