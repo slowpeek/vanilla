@@ -11,7 +11,7 @@ fi
 
 set -eu
 
-! test -f "${BASH_SOURCE[0]%/*}"/locate-exit.sh || source "$_"
+! test -f "${BASH_SOURCE[0]%/*}"/dev/main.sh || source "$_"
 
 # https://github.com/slowpeek/here-bye -------------------------
 _ () {
