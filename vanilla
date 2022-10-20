@@ -467,7 +467,7 @@ cmd_select () {
 cmd_install () {
     # Readonly flag is used here to protect $dir from unintentional
     # changes until the dir is deleted.
-    local -r dir=${TMPDIR:-/tmp}/vanilla:$name
+    local -r dir=/tmp/vanilla:$name
 
     [[ -e $dir ]] && _dir "$dir" || mkdir "$dir"
     pushd "$dir" >/dev/null
