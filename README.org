@@ -19,10 +19,7 @@ default. Here is the complete list with package names for Ubuntu:
 - curl (from =curl=)
 - gpg (from =gnupg=)
 - column (from =bsdmainutils=)
-- bzip2 (from =bzip2=) or lbzip2 (from =lbzip2=)
-
-With =lbzip2= installed you can significantly speed up decompression
-of downloaded packages.
+- xz (from =xz-utils=)
 
 You can use the [[#desktop][desktop]] command to generate sample desktop files.
 
@@ -186,7 +183,7 @@ Example: =vanilla download firefox=
 
 Extract a previously downloaded archive into the base dir.
 
-Example: =vanilla extract firefox-91.0.tar.bz2=
+Example: =vanilla extract firefox-140.0.2.tar.xz=
 
 *** select
 

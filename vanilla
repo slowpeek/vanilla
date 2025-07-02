@@ -370,7 +370,7 @@ cmd_download () {
     }
 
     local fn n=0
-    for fn in "$pkg-$latest.tar.bz2"{.asc,}; do
+    for fn in "$pkg-$latest.tar.xz"{.asc,}; do
         [[ ! -e $fn ]] || continue
 
         ((n++)) || [[ -w . ]] || bye "'$PWD' is not writable"
@@ -405,7 +405,7 @@ cmd_extract () {
 
     [[ -f $1 ]] || bye "'$1' is not a regular file"
     [[ -r $1 ]] || bye "'$1' is not readable"
-    [[ $1 == *.tar.bz2 ]] || bye "'$1' is not a .tar.bz2 archive"
+    [[ $1 == *.tar.xz ]] || bye "'$1' is not a .tar.xz archive"
 
     local fn=${1##*\/}
 
@@ -414,7 +414,7 @@ cmd_extract () {
 
     w_dir "$base"
 
-    local dir=$base/${1%.tar.bz2}
+    local dir=$base/${1%.tar.xz}
     if [[ -e $dir ]]; then
         _dir "$dir"
         w_dir "$dir"
@@ -424,10 +424,9 @@ cmd_extract () {
 
     here "extract to '$dir'"
 
-    need_bin bzip2 lbzip2
+    need_bin xz
 
     local args=(-C "$dir" --strip-components=1 --checkpoint=.400)
-    ! is_bin lbzip2 || args+=(-I lbzip2)
     tar xf "$1" "${args[@]}" || bye 'extract fail'
 
     printf '\r\e[M'             # Reuse the line taken by tar's
